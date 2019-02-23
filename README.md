@@ -64,4 +64,12 @@ http://ms-multimedia-challenge.com/static/resource/train_2017.zip
 - One option: Include transcript or transcribed audio from Youtube
   - However, it is possible audio information can be misleading
 
+## Reference
 
+- [Weakly Supervised Dense Video
+    Captioning](https://arxiv.org/pdf/1704.01502.pdf)
+  - [Video to Language Challenge
+    (4th/5th)](https://github.com/szq0214/MSR-VTT-Challenge)
+- [A 2018 Guide to Action
+          Recognition](http://blog.qure.ai/notes/deep-learning-for-videos-action-recognition-review)
+- [Hierarchical Boundary-Aware Neural Encoder for Video Captioning](https://github.com/Yugnaynehc/banet)
