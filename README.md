@@ -29,16 +29,14 @@ our video summarizer what content is relevant to summarize.
 
 0. Load Data
   - Initialize Dataset loaders
+    - Download MSRVTT if necessary
   - Initialize Models
-1. 
-
-
-### Data
-```text
-data/
-  /x/0000.npy .... 9999.npy
-  /y/0000
-```
+    - Possibly load existing weights
+1. Train Loop
+  - Save weights, visualize if wanted
+  - Execute epoch step
+  - Evaluate loss and backprop
+2. Ship
 
 ### Organization
 
@@ -79,6 +77,15 @@ data/
              - arg1=val2
                - arg2=val1
                - arg2=val2
+                 - lastArg=lastVal
+                   - 0000
+                   - 0001
+                     - 00_10.pth
+                     - 01_10.pth
+                     - 02_10.pth
+                     - weights.pth
+                   - ...
+                 - ...
                - ...
             - ...
     - model
