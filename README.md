@@ -25,6 +25,74 @@ our video summarizer what content is relevant to summarize.
   - [Weakly Supervised Dense Video
     Captioning](https://arxiv.org/pdf/1704.01502.pdf)
 
+## Workflow
+
+0. Load Data
+  - Initialize Dataset loaders
+  - Initialize Models
+1. 
+
+
+### Data
+```text
+data/
+  /x/0000.npy .... 9999.npy
+  /y/0000
+```
+
+### Organization
+
+```text
+
+./src
+    - scripts
+        - train.py
+            - Initialize the models, dataset loaders, calls `train_step` and `eval_step` from `train_test_utils`
+        - demo.py
+            - Live demo with either webcam or video input
+     - train
+        - train_test_utils.py
+            - Define per-epoch train and eval steps
+        - loss.py
+            - Define loss function used by train utils
+    - data 
+        - gen_data_loader.py
+          - Loads MSRVTT, preprocesses text, exposes pytorch data loader 
+        - msrvtt.py
+          - Loads MSRVTT frames, annotations, and allows for dataset downloading
+          - Possibly also NLP utils go here?
+        - video.py
+          - Loads a video per-frame into numpy
+        - datasets
+          - MSRVTT.50
+            - ...
+          - MSRVTT.100
+            - ...
+          - MSRVTT
+            - 0000.npy
+            - ...
+            - 9999.npy
+        - weights
+           - MSRVTT.50
+             - arg1=val1
+               - ...
+             - arg1=val2
+               - arg2=val1
+               - arg2=val2
+               - ...
+            - ...
+    - model
+        - object
+        - rnn?
+        - transformer
+        - encoder
+        - decoder
+    - utils
+        - cmd_line.py
+          - Auto argparse
+        - utility.py
+```
+
 ## Discussion
 
 ### Sampling Rate
