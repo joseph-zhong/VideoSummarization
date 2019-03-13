@@ -100,6 +100,9 @@ our video summarizer what content is relevant to summarize.
         - utility.py
 ```
 
+## Dev Setup
+0. Add `VS_WORKSPACE` to point to `src` in your environment.
+
 ## Discussion
 
 ### Sampling Rate
