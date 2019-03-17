@@ -17,26 +17,24 @@ our video summarizer what content is relevant to summarize.
 
 ## TODO
 
-- [ ] Download MSR-VTT dataset with available captions
+- [x] Download MSR-VTT dataset with available captions
   - Download just the MP4, and VTT, we should be able to process the buffered
     frames
-- [ ] Incorporate Yolo into framework
-- [ ] Re-adapt training loop with losses on object detector, and language model
-  - [Weakly Supervised Dense Video
-    Captioning](https://arxiv.org/pdf/1704.01502.pdf)
-
-## Workflow
-
-0. Load Data
+- [ ] Load Data
   - Initialize Dataset loaders
     - Download MSRVTT if necessary
   - Initialize Models
     - Possibly load existing weights
-1. Train Loop
+- [ ] Train Loop
   - Save weights, visualize if wanted
   - Execute epoch step
   - Evaluate loss and backprop
-2. Ship
+- [ ] Ship
+
+### Development Workflow
+
+0. Preprocess dataset by running `./src/data/video.py`
+1. Run `./scripts/train.py`
 
 ### Organization
 
@@ -101,6 +99,7 @@ our video summarizer what content is relevant to summarize.
 ```
 
 ## Dev Setup
+
 0. Add `VS_WORKSPACE` to point to `src` in your environment.
 
 ## Discussion
@@ -109,7 +108,7 @@ our video summarizer what content is relevant to summarize.
 
 - How often should we detect objects? Most objects will be in frame for several
   seconds at least
-- We will get diminishing returns on asymptotic asmpling, (e.g.: sampling at
+- We will get diminishing returns on asymptotic sampling, (e.g.: sampling at
   30Hz vs 40Hz)
 - optimal sampling rate, is most likely around ~0.5Hz, we can also downsample
   video input to the object detector to save on time and memory
