@@ -69,6 +69,17 @@ our video summarizer what content is relevant to summarize.
             - ...
             - 9999.npy
         - weights
+           - imagenet
+             - model=resnet50
+               - 0000
+                 - weights.pth
+             - model=vgg16
+               - 0000
+                 - weights.pth
+           - sports1m
+             - model=c3d
+               - 0000
+                 - weights.pickle
            - MSRVTT.50
              - arg1=val1
                - ...

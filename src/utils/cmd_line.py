@@ -14,11 +14,13 @@ import src.utils.utility as _util
 
 _logger = _util.getLogger(__file__)
 
+
 def _str_to_bool(s):
     """Convert string to bool (in argparse context)."""
     if s.lower() not in ['true', 'false']:
         raise ValueError('Need bool; got %r' % s)
     return {'true': True, 'false': False}[s.lower()]
+
 
 def add_boolean_argument(parser, name, default=False):
     group = parser.add_mutually_exclusive_group()
@@ -31,6 +33,7 @@ def add_boolean_argument(parser, name, default=False):
     group.add_argument('--no' + name,
         dest=name,
         action='store_false')
+
 
 def parseArgsForClassOrScript(fn):
     assert inspect.isfunction(fn) or inspect.ismethod(fn)
@@ -130,11 +133,6 @@ def main():
     _logger.info("Passed arguments: '{}'".format(varsArgs))
     test_cmdline(**varsArgs)
 
-
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('-l', '--list', help='delimited list input', type=float, nargs='+')
-    # args = parser.parse_args()
-    # print(args.list)
-
 if __name__ == '__main__':
     main()
+
