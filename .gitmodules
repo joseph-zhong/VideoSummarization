@@ -1,0 +1,3 @@
+[submodule "extern/coco_caption"]
+	path = extern/coco_caption
+	url = git@github.com:Yugnaynehc/coco-caption.git
