@@ -88,9 +88,15 @@ def loadArray(directory: str, name: str) -> np.ndarray:
     return np.concatenate(batches, axis=0)
 
 
-def getRawDatasetByName(name: str) -> str:
+def getRawDatasetByName(name: str, mode: str = None) -> str:
+    assert isinstance(name, str) and len(name), "Expected dataset name as string got {}".format(name)
+    assert mode is None or isinstance(mode, str) and mode == "train" or mode == "test" or mode == "val", \
+        "mode must be train, val, or test got {}".format(mode)
+
     datasets = os.path.join(getWorkspace(), "data", "raw")
     dataset = os.path.join(datasets, name)
+    if mode:
+        dataset = os.path.join(dataset, mode)
 
     assert os.path.exists(dataset), \
         "Could not find dataset '{}' in path '{}'".format(name, datasets)
