@@ -1,13 +1,27 @@
 """
 Collection of common utility functions (ex., get weight path)
 """
-import glob
 import os
+import glob
 import shutil
+import logging
 
 from functools import lru_cache
 
 from typing import Any
+
+_logger = logging.getLogger(__file__)
+_LOGGING_FORMAT = "[%(asctime)s %(levelname)5s %(filename)s %(funcName)s:%(lineno)s] %(message)s"
+logging.basicConfig(format=_LOGGING_FORMAT, datefmt="%Y-%m-%d %H:%M:%S")
+
+DEFAULT_VERBOSITY = 4
+
+def getLogger(name, level=logging.DEBUG, verbosity=DEFAULT_VERBOSITY):
+    level = max(level, logging.CRITICAL - 10 * verbosity)
+
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    return logger
 
 
 def mkdir(path: str) -> None:
