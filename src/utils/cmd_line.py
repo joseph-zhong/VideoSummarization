@@ -56,7 +56,7 @@ def parseArgsForClassOrScript(fn):
         if type_ is bool:
             # REVIEW josephz: This currently has a serious flaw in that clients may only set positive boolean flags.
             #   The way to fix this would be to use the annotation to parse the input as a boolean.
-            parser.add_argument("--" + arg_name, default=default, type=type_, action='store_true')
+            parser.add_argument("--" + arg_name, default=default, action='store_true')
         elif type_ in (tuple, list, GeneratorType):
             parser.add_argument("--" + arg_name, default=default, type=type_, nargs="+", help="Tuple of " + arg_name)
         else:
