@@ -6,3 +6,16 @@
 ## Python Cache
 *.pyc
 
+## Data
+data/*
+
+## PyEnv
+bin/
+extern/
+lib/
+pip-selfcheck.json
+pyvenv.cfg
+share/
+
+## Temporary
+tmp/
