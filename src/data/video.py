@@ -130,8 +130,6 @@ def extract_features(raw, dataset, mode, frequency=1.0, max_frames=-1, aencoder=
 
         features[i, :frames.shape[0], :] = af  #np.concatenate([af, mf], axis=1)
 
-    print(features.shape)
-
     _util.dumpArray(dataset_dir, "frames", 100, features)
 
 

@@ -114,3 +114,17 @@ class MotionEncoder(nn.Module):
     @staticmethod
     def feature_size():
         return 4096
+
+class BANet(nn.Module):
+    def __init__(self, feature_size, projected_size, mid_size, hidden_size,
+                 max_frames, max_words, vocab):
+        super(BANet, self).__init__()
+        self.encoder = Encoder(feature_size, projected_size, mid_size, hidden_size,
+                               max_frames)
+        self.decoder = Decoder(hidden_size, projected_size, hidden_size,
+                               max_words, vocab)
+
+    def forward(self, videos, captions, teacher_forcing_ratio=0.5):
+        video_encoded = self.encoder(videos)
+        output = self.decoder(video_encoded, captions, teacher_forcing_ratio)
+        return output, video_encoded

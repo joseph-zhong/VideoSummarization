@@ -1,0 +1,9 @@
+# requirements.txt
+torch
+torchvision
+numpy
+scikit-image
+nltk
+h5py
+pandas
+tensorboard_logger

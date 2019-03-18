@@ -46,12 +46,3 @@ class MSRVTTDataset(data.Dataset):
 
     def __len__(self):
         return len(self._captions)
-
-
-def main():
-    x = MSRVTTDataset("MSRVTT.1", "test")
-    for i in range(len(x)):
-        a, b, c, d = x[i]
-        print("{} {} {} {}".format(a.shape, b, c, d))
-
-main()

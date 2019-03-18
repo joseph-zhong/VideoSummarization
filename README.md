@@ -17,26 +17,31 @@ our video summarizer what content is relevant to summarize.
 
 ## TODO
 
-- [ ] Download MSR-VTT dataset with available captions
+- [x] Download MSR-VTT dataset with available captions
   - Download just the MP4, and VTT, we should be able to process the buffered
     frames
-- [ ] Incorporate Yolo into framework
-- [ ] Re-adapt training loop with losses on object detector, and language model
-  - [Weakly Supervised Dense Video
-    Captioning](https://arxiv.org/pdf/1704.01502.pdf)
-
-## Workflow
-
-0. Load Data
+- [ ] Load Data
   - Initialize Dataset loaders
     - Download MSRVTT if necessary
   - Initialize Models
     - Possibly load existing weights
-1. Train Loop
+- [ ] Train Loop
   - Save weights, visualize if wanted
   - Execute epoch step
   - Evaluate loss and backprop
-2. Ship
+- [ ] Ship
+
+### Development Workflow
+
+0. Preprocess dataset by running `./src/data/video.py`
+    - We used the following parameters:
+      - `frequency=0.3`, or about downsampling to 5fps from 15 fps video
+      - `max_frames=100`, maximum frame-sequence length for padding
+1. Run `./scripts/train.py`
+
+## Dev Setup
+
+0. Add `VS_WORKSPACE` to point to `src` in your environment.
 
 ### Organization
 
@@ -61,44 +66,6 @@ our video summarizer what content is relevant to summarize.
           - Possibly also NLP utils go here?
         - video.py
           - Loads a video per-frame into numpy
-        - datasets
-          - MSRVTT.50
-            - ...
-          - MSRVTT.100
-            - ...
-          - MSRVTT
-            - 0000.npy
-            - ...
-            - 9999.npy
-        - weights
-           - imagenet
-             - model=resnet50
-               - 0000
-                 - weights.pth
-             - model=vgg16
-               - 0000
-                 - weights.pth
-           - sports1m
-             - model=c3d
-               - 0000
-                 - weights.pickle
-           - MSRVTT.50
-             - arg1=val1
-               - ...
-             - arg1=val2
-               - arg2=val1
-               - arg2=val2
-                 - lastArg=lastVal
-                   - 0000
-                   - 0001
-                     - 00_10.pth
-                     - 01_10.pth
-                     - 02_10.pth
-                     - weights.pth
-                   - ...
-                 - ...
-               - ...
-            - ...
     - model
         - object
         - rnn?
@@ -109,10 +76,47 @@ our video summarizer what content is relevant to summarize.
         - cmd_line.py
           - Auto argparse
         - utility.py
+./data
+    - datasets
+          - MSRVTT.50
+            - ...
+          - MSRVTT.100
+            - ...
+          - MSRVTT
+            - 0000.npy
+            - ...
+            - 9999.npy
+    - raw
+    - weights
+       - imagenet
+         - model=resnet50
+           - 0000
+             - weights.pth
+         - model=vgg16
+           - 0000
+             - weights.pth
+       - sports1m
+         - model=c3d
+           - 0000
+             - weights.pickle
+       - MSRVTT.50
+         - arg1=val1
+           - ...
+         - arg1=val2
+           - arg2=val1
+           - arg2=val2
+             - lastArg=lastVal
+               - 0000
+               - 0001
+                 - 00_10.pth
+                 - 01_10.pth
+                 - 02_10.pth
+                 - weights.pth
+               - ...
+             - ...
+           - ...
+        - ...
 ```
-
-## Dev Setup
-0. Add `VS_WORKSPACE` to point to `src` in your environment.
 
 ## Discussion
 
@@ -120,7 +124,7 @@ our video summarizer what content is relevant to summarize.
 
 - How often should we detect objects? Most objects will be in frame for several
   seconds at least
-- We will get diminishing returns on asymptotic asmpling, (e.g.: sampling at
+- We will get diminishing returns on asymptotic sampling, (e.g.: sampling at
   30Hz vs 40Hz)
 - optimal sampling rate, is most likely around ~0.5Hz, we can also downsample
   video input to the object detector to save on time and memory
