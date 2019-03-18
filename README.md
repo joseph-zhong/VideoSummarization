@@ -34,9 +34,9 @@ our video summarizer what content is relevant to summarize.
 ### Development Workflow
 
 0. Preprocess dataset by running `./src/data/video.py`
-  - We used the following parameters:
-    - `frequency=0.3`, or about downsampling to 5fps from 15 fps video
-    - `max_frames=100`, maximum frame-sequence length for padding
+    - We used the following parameters:
+      - `frequency=0.3`, or about downsampling to 5fps from 15 fps video
+      - `max_frames=100`, maximum frame-sequence length for padding
 1. Run `./scripts/train.py`
 
 ## Dev Setup
