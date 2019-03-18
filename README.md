@@ -39,6 +39,10 @@ our video summarizer what content is relevant to summarize.
     - `max_frames=100`, maximum frame-sequence length for padding
 1. Run `./scripts/train.py`
 
+## Dev Setup
+
+0. Add `VS_WORKSPACE` to point to `src` in your environment.
+
 ### Organization
 
 ```text
@@ -62,44 +66,6 @@ our video summarizer what content is relevant to summarize.
           - Possibly also NLP utils go here?
         - video.py
           - Loads a video per-frame into numpy
-        - datasets
-          - MSRVTT.50
-            - ...
-          - MSRVTT.100
-            - ...
-          - MSRVTT
-            - 0000.npy
-            - ...
-            - 9999.npy
-        - weights
-           - imagenet
-             - model=resnet50
-               - 0000
-                 - weights.pth
-             - model=vgg16
-               - 0000
-                 - weights.pth
-           - sports1m
-             - model=c3d
-               - 0000
-                 - weights.pickle
-           - MSRVTT.50
-             - arg1=val1
-               - ...
-             - arg1=val2
-               - arg2=val1
-               - arg2=val2
-                 - lastArg=lastVal
-                   - 0000
-                   - 0001
-                     - 00_10.pth
-                     - 01_10.pth
-                     - 02_10.pth
-                     - weights.pth
-                   - ...
-                 - ...
-               - ...
-            - ...
     - model
         - object
         - rnn?
@@ -110,11 +76,47 @@ our video summarizer what content is relevant to summarize.
         - cmd_line.py
           - Auto argparse
         - utility.py
+./data
+    - datasets
+          - MSRVTT.50
+            - ...
+          - MSRVTT.100
+            - ...
+          - MSRVTT
+            - 0000.npy
+            - ...
+            - 9999.npy
+    - raw
+    - weights
+       - imagenet
+         - model=resnet50
+           - 0000
+             - weights.pth
+         - model=vgg16
+           - 0000
+             - weights.pth
+       - sports1m
+         - model=c3d
+           - 0000
+             - weights.pickle
+       - MSRVTT.50
+         - arg1=val1
+           - ...
+         - arg1=val2
+           - arg2=val1
+           - arg2=val2
+             - lastArg=lastVal
+               - 0000
+               - 0001
+                 - 00_10.pth
+                 - 01_10.pth
+                 - 02_10.pth
+                 - weights.pth
+               - ...
+             - ...
+           - ...
+        - ...
 ```
-
-## Dev Setup
-
-0. Add `VS_WORKSPACE` to point to `src` in your environment.
 
 ## Discussion
 

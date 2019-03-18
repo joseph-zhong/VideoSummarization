@@ -99,7 +99,11 @@ def extract_features(raw, dataset, mode, frequency=1.0, max_frames=-1, aencoder=
     raw_dir = _util.getRawDatasetByName(raw)
     dataset_dir = _util.getDatasetByName(dataset, mode=mode, create=True)
 
+<<<<<<< HEAD
+    videos = glob.glob(os.path.join(raw_dir, mode, "*.mp4"))
+=======
     videos = glob.glob(os.path.join(raw_dir, mode, "*.mp4"))[:22]
+>>>>>>> 0fd15b6b7d3da06a51006236ab2d29d55b4db0e2
     assert len(videos) > 0, "Could not find any mp4 videos for {} in {}".format(mode, raw_dir)
 
     aencoder = aencoder.cuda(1)
@@ -131,9 +135,8 @@ def extract_features(raw, dataset, mode, frequency=1.0, max_frames=-1, aencoder=
 
     print(features.shape)
 
-    _util.dumpArray(dataset_dir, "frames", 10, features)
+    _util.dumpArray(dataset_dir, "frames", 100, features)
 
-    print(_util.loadArray(dataset_dir, "frames").shape)
 
 def main():
     global _logger
