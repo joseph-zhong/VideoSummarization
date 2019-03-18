@@ -41,7 +41,7 @@ our video summarizer what content is relevant to summarize.
 
 ## Dev Setup
 
-0. Add `VS_WORKSPACE` to point to `src` in your environment.
+0. Add `VS_WORKSPACE` to point to this repository location.
 
 ### Organization
 
@@ -83,9 +83,10 @@ our video summarizer what content is relevant to summarize.
           - MSRVTT.100
             - ...
           - MSRVTT
-            - 0000.npy
-            - ...
-            - 9999.npy
+            - column
+              - 0000.npy
+              - ...
+              - 9999.npy
     - raw
     - weights
        - imagenet
