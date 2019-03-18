@@ -16,6 +16,7 @@ import inspect
 
 import torch
 import numpy as np
+import tensorboard_logger as _tb_logger
 
 import src.data.msrvtt as _data
 import src.model.models as _models
@@ -136,12 +137,14 @@ def train(
     print("\tDataset: '%s'".format(dataset))
     print("\tCheckpoint Path: '%d'".format(ckpt_path))
 
+    best_meteor = 0
+    loss_count = 0
     for epoch in range(num_epochs):
         epsilon = max(0.6, ss_factor / (ss_factor + np.exp(epoch / ss_factor)))
         print('epoch:%d\tepsilon:%.8f' % (epoch, epsilon))
-        log_value('epsilon', epsilon, epoch)
+        _tb_logger.log_value('epsilon', epsilon, epoch)
 
-        for i, (videos, captions, cap_lens, video_ids) in enumerate(train_loader, start=1):
+        for i, (videos, targets, cap_lens, video_ids) in enumerate(train_loader, start=1):
             if use_cuda:
                 videos = videos.cuda()
                 targets = targets.cuda()
@@ -153,7 +156,7 @@ def train(
             # NOTE: Usually the last batch is less than the selected batch_size, so we dynamically
             #       compute the correct batch_size to use here, rather than throwing away the last
             #       training batch.
-            bsz = len(captions)
+            bsz = len(targets)
 
             # Un-pad and flatten the outputs and labels.
             outputs = torch.cat([outputs[j][:cap_lens[j]] for j in range(bsz)], dim=0)
@@ -163,7 +166,7 @@ def train(
 
             # Compute loss for back-propagation.
             loss = criterion(outputs, targets)
-            # log_value('loss', loss.data[0], epoch * num_train_steps + i)
+            # _tb_logger.log_value('loss', loss.data[0], epoch * num_train_steps + i)
             loss_count += loss.data[0]
             loss.backward()
             optimizer.step()
@@ -177,7 +180,7 @@ def train(
                 tokens = banet.decoder.sample(video_encoded)
                 tokens = tokens.data[0].squeeze()
                 we = banet.decoder.decode_tokens(tokens)
-                gt = banet.decoder.decode_tokens(captions[0].squeeze())
+                gt = banet.decoder.decode_tokens(targets[0].squeeze())
                 print('[vid:%d]' % video_ids[0])
                 print('WE: %s\nGT: %s' % (we, gt))
 
@@ -186,7 +189,7 @@ def train(
         print("Computing Metrics:...")
         metrics = _train.eval_step(eval_loader, banet, test_prediction_txt_path, reference, use_cuda=use_cuda)
         for k, v in metrics.items():
-            # log_value(k, v, epoch)
+            # _tb_logger.log_value(k, v, epoch)
             print('\t%s: %.6f' % (k, v))
             if k == 'METEOR' and v > best_meteor:
                 # Save the best model based on the METEOR metric.
