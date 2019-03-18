@@ -49,12 +49,3 @@ def measure(prediction_txt_path, reference):
     for metric, score in cocoEval.eval.items():
         print('%s: %.3f' % (metric, score))
     return cocoEval.eval
-
-def get_shit():
-    val_reference_txt_path = os.path.join(result_dir, ds + '_val_references.txt')
-    val_prediction_txt_path = os.path.join(result_dir, ds + '_val_predictions.txt')
-
-    test_reference_txt_path = os.path.join(result_dir, ds + '_test_references.txt')
-    test_prediction_txt_path = os.path.join(result_dir, ds + '_test_predictions.txt')
-
-    return

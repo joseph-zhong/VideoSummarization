@@ -38,30 +38,62 @@ test_prediction_txt_path = os.path.join(tmp_dir, 'msr-vtt_test_predictions.txt')
 
 
 def train(
+    # General training hyperparameters.
     dataset: str,
-    num_epochs=100,
-    batch_size=100,
+    num_epochs: int=100,
+    batch_size: int=100,
 
-    learning_rate=3e-4,
-    ss_factor=24,
-    max_ss=0.6,
-    use_cuda=True,
-    use_ckpt=False,
+    # Learning rate schedulers.
+    learning_rate: float=3e-4,
+    ss_factor: int=24,
+    min_ss: float=0.6,
 
-    projected_size=500,
-    hidden_size=1024,  # Hidden size of the recurrent cells.
-    mid_size=128,  # Dimension of the boundary detection layer.
+    # Representation hyperparameters.
+    projected_size: int=500,
+    hidden_size: int=1024,  # Hidden size of the recurrent cells.
+    mid_size: int=128,  # Dimension of the boundary detection layer.
 
-    frame_shape=(3, 224, 224),  # Video frame shape.
-    a_feature_size=2048,  # Appearance model feature-dimension size.
-
+    # REVIEW josephz: Remove this?
+    # frame_shape: tuple=(3, 224, 224),  # Video frame shape.
+    a_feature_size: int=2048,  # Appearance model feature-dimension size.
     # REVIEW josephz: Remove this?
     # m_feature_size=4096,  # Motion model feature-dimension size.
 
-    frame_sample_rate=10,  # Sample rate of video frames.
-    max_frames=100,  # Maximum length of the video-frame sequence.
-    max_words=30,  # Maximum length of the caption-word sequence.
+    # Maximum-size hyperparameters.
+    # frame_sample_rate: int=10,  # Sample rate of video frames.
+    max_frames: int=100,  # Maximum length of the video-frame sequence.
+    max_words: int=30,  # Maximum length of the caption-word sequence.
+
+    use_cuda: bool=True,
+    use_ckpt: bool=False,
+    seed: int=0,
 ):
+    """
+
+    Args:
+        dataset (str): Dataset to train on.
+        num_epochs (int): Number of epochs to train for.
+        batch_size (int): Batch size to train with.
+        learning_rate (float): Learning rate.
+        ss_factor (int): Scheduled Sampling factor, to compute a teacher-forcing ratio.
+        min_ss (float): Minimum teacher-forcing ratio.
+
+        projected_size (int): Projection size for the Encoder-Decoder model.
+        hidden_size (int): Hidden state size for the recurrent network in the encoder.
+        mid_size (int): Hidden state size for the Boundary Detector network in the encoder.
+        a_feature_size: Input feature size for the Encoder network.
+
+        max_frames (int): Maximum length of the video-frame sequence.
+        max_words (int): Maximum length of the caption-word sequence.
+
+        use_cuda (bool): Flag whether to use CUDA devices.
+        use_ckpt (bool): Flag on whether to load checkpoint if possible.
+        seed (int): Random seed.
+    """
+    # Set seeds.
+    torch.random.manual_seed(0)
+    np.random.seed(0)
+
     # Prepare output paths.
     params = {arg_name: arg.default for arg_name, arg in inspect.signature(train).parameters.items()}
     ckpt_path = _util.getWeightsByParams(params=params)
@@ -130,7 +162,7 @@ def train(
     print("Training Configuration:")
     print("\tLearning Rate: '{0:.4f}'".format(learning_rate))
     print("\tScheduled Sampling:")
-    print("\t\tMax Teacher Forcing Rate: '{0:.4f}'".format(max_ss))
+    print("\t\tMax Teacher Forcing Rate: '{0:.4f}'".format(min_ss))
     print("\t\tScheduled Factor: '{0:.4f}'".format(ss_factor))
     print("\tBatch Size: '%d'".format(batch_size))
     print("\tEpochs: '%d'".format(num_epochs))
