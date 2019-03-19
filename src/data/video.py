@@ -70,12 +70,14 @@ def preprocess_frame(frame, dims=(224, 224)):
     frame = resize_frame(frame, dims)
     frame = frame.astype(np.float32)
     # ImageNet de-mean.
+    frame /= 255
     frame -= np.array([0.485, 0.456, 0.406])
     frame /= np.array([0.229, 0.224, 0.225])
     return frame
 
 
-def extract_features(raw, dataset, mode, frequency=1.0, max_frames=-1, aencoder=AppearanceEncoder(), mencoder=MotionEncoder()):
+def extract_features(raw, dataset, mode, frequency=1.0, max_frames=-1, overwrite=False, aencoder=AppearanceEncoder(),
+                     mencoder=MotionEncoder()):
     """
     Builds appearance and motion features for a list of videos.
 
@@ -84,6 +86,7 @@ def extract_features(raw, dataset, mode, frequency=1.0, max_frames=-1, aencoder=
     :param mode: Dataset mode (train, val, test).
     :param frequency: Frequency at which to sample frames from the videos in Hz in (0, 1]
     :param max_frames: Maximum number of allowable frames in a given video.
+    :param overwrite: Unless this flag is specified, will fail rather than overwrite existing cache.
     :param aencoder: Encoder used for appearance.
     :param mencoder: Encoder used for motion.
     :return: Numpy of features with shape [len(videos), max_frames, aencoder.feature_size() + mencoder.feature_size()]
@@ -130,7 +133,7 @@ def extract_features(raw, dataset, mode, frequency=1.0, max_frames=-1, aencoder=
 
         features[i, :frames.shape[0], :] = af  #np.concatenate([af, mf], axis=1)
 
-    _util.dumpArray(dataset_dir, "frames", 100, features)
+    _util.dumpArray(dataset_dir, "frames", 100, features, overwrite=overwrite)
     return features
 
 
