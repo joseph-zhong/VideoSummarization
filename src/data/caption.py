@@ -67,8 +67,8 @@ class Vocabulary(metaclass=Singleton):
             inst = super(Vocabulary, cls).__new__(cls, *args, **kwargs)
         return inst
 
-
-    def __init__(self, threshold: int = 3):
+    # Due to the C implementation of object's __call__, this argument must exist though it is unused.
+    def __init__(self, threshold: int = 3, dataset = None):
         """
         Creates a Vocabulary with the given threshold.
         :param threshold: Number of occurrences under which words will be ignored.
