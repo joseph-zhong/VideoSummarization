@@ -48,8 +48,8 @@ class VideoDataset(_data.Dataset):
 
 
 def train_collate_fn(data):
-    # Sort data by video_id.
-    data.sort(key=lambda x: x[-1], reverse=True)
+    # Sort data by cap_len.
+    data.sort(key=lambda x: x[-2], reverse=False)
 
     videos, captions, lengths, video_ids = zip(*data)
 
