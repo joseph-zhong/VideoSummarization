@@ -19,6 +19,7 @@ from tqdm import tqdm
 
 import src.utils.cmd_line as _cmd
 import src.utils.utility as _util
+import src.utils.coco as _coco
 
 
 class Token(Enum):
@@ -232,7 +233,8 @@ def build_cache(raw: str, dataset: str, threshold: int, max_words: int, train_fr
         test_video_ids.append(sentence["video_id"])
         test_sentences.append(sentence["caption"])
 
-    vocab = build_vocabulary(train_sentences + val_sentences + test_sentences, threshold)
+    all_sentences = train_sentences + val_sentences + test_sentences
+    vocab = build_vocabulary(all_sentences, threshold)
 
     last_train_idx = int(len(train_ann["sentences"]) * train_fraction)
     _logger.info("Using {} of {} total train sentences".format(last_train_idx, len(train_ann["sentences"])))
@@ -244,6 +246,19 @@ def build_cache(raw: str, dataset: str, threshold: int, max_words: int, train_fr
     with open(os.path.join(_util.get_dataset_by_name(dataset), Vocabulary.PICKLE_FILE), 'wb') as f:
         pickle.dump(vocab, f)
 
+    prepare_gt(os.path.join(val_dir, "reference.json"), val_sentences, val_video_ids)
+    prepare_gt(os.path.join(test_dir, "reference.json"), test_sentences, test_video_ids)
+
+
+def prepare_gt(path, sentences, video_ids):
+    _logger.info("Outputting ground truth to {}".format(path))
+    with open(path, 'w') as f_out:
+        for sentence, video_id in zip(sentences, video_ids):
+            video_id = int(video_id[5:])
+            ground_truth = "{}\t{}\n".format(video_id, sentence)
+            f_out.write(ground_truth)
+
+    _coco.create_reference_json(path)
 
 def main():
     global _logger
