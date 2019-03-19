@@ -74,13 +74,13 @@ We can approach video-captioning using encoder-decoder recurrent neural architec
         - loss.py
             - Define loss function used by train utils
     - data 
-        - gen_data_loader.py
-          - Loads MSRVTT, preprocesses text, exposes pytorch data loader 
         - msrvtt.py
-          - Loads MSRVTT frames, annotations, and allows for dataset downloading
-          - Possibly also NLP utils go here?
+          - Defines MSRVTT torch dataset.
+          - Defines MSRVTT dataloader.
         - video.py
-          - Loads a video per-frame into numpy
+          - Produces and caches encoded features for dataset videos.
+        - caption.py
+          - Preprocesses and caches captions for a dataset.
     - model
         - object
         - rnn?
