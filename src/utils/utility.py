@@ -1,4 +1,7 @@
 """
+utility.py
+---
+
 Collection of common utility functions (ex., get weight path)
 """
 import os
@@ -14,6 +17,7 @@ import numpy as np
 
 DEFAULT_VERBOSITY = 4
 
+
 def getLogger(name, level=logging.DEBUG, verbosity=DEFAULT_VERBOSITY):
     level = max(level, logging.CRITICAL - 10 * verbosity)
 
@@ -21,9 +25,11 @@ def getLogger(name, level=logging.DEBUG, verbosity=DEFAULT_VERBOSITY):
     logger.setLevel(level)
     return logger
 
+
 _logger = getLogger(__file__)
 _LOGGING_FORMAT = "[%(asctime)s %(levelname)5s %(filename)s %(funcName)s:%(lineno)s] %(message)s"
 logging.basicConfig(format=_LOGGING_FORMAT, datefmt="%Y-%m-%d %H:%M:%S")
+
 
 def mkdir(path: str) -> None:
     if not os.path.exists(path):
@@ -47,7 +53,7 @@ def dumpArray(directory: str, name: str, batch: int, arr: np.ndarray, overwrite=
     path = os.path.join(directory, name)
     assert isinstance(name, str), "Invalid dump name: {}".format(name)
 
-    if overwrite:
+    if overwrite and os.path.exists(path):
         _logger.warning("Deleting existing dump {}".format(path))
         shutil.rmtree(path)
     else:
@@ -61,12 +67,10 @@ def dumpArray(directory: str, name: str, batch: int, arr: np.ndarray, overwrite=
 
     num_batches = arr.shape[0] // batch
     for i in range(num_batches):
-        _logger.info("\tbatch {}".format(i))
         np.save(os.path.join(path, "{0:04d}".format(i)), arr[i * batch:(i + 1) * batch])
 
-    remainder = arr.shape[0] % (num_batches * batch)
+    remainder = arr.shape[0] % (num_batches * batch) if num_batches else arr.shape[0]
     if remainder:
-        _logger.info("\tbatch {}".format(num_batches))
         np.save(os.path.join(path, "{0:04d}".format(num_batches)), arr[-remainder:])
 
 
@@ -74,7 +78,7 @@ def loadArray(directory: str, name: str) -> np.ndarray:
     assert isinstance(directory, str) and os.path.isdir(directory), "Could not find directory: {}".format(directory)
 
     path = os.path.join(directory, name)
-    assert isinstance(name, str), "Invald dump name: {}".format(name)
+    assert isinstance(name, str), "Invalid dump name: {}".format(name)
 
     assert os.path.isdir(path), "Existing dump not found for {} in {}".format(name, directory)
 
