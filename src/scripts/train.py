@@ -155,8 +155,8 @@ def train(
         optimizer.load_state_dict(torch.load(optimizer_pth_path))
 
     # Initialize Dataloaders.
-    train_loader = _data.get_train_dataloader('MSRVTT', batch_size=batch_size)
-    eval_loader = _data.get_eval_dataloader('MSRVTT', 'val', batch_size=batch_size)
+    train_loader = _data.get_train_dataloader(dataset, batch_size=batch_size)
+    eval_loader = _data.get_eval_dataloader(dataset, 'val', batch_size=batch_size)
 
     num_train_steps = len(train_loader)
     num_eval_steps = len(eval_loader)
