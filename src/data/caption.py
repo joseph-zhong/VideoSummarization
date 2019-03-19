@@ -33,6 +33,7 @@ class Token(Enum):
 
 
 class Vocabulary:
+    PICKLE_FILE = "vocab.pkl"
     """
     Represents an NLP vocabulary. Given all words in a corpus, it will identify all unique words and
     will return a word's unique index on __getitem__.
@@ -207,7 +208,7 @@ def build_cache(raw: str, dataset: str, threshold: int, max_words: int) -> None:
     _build_cache(dataset, "val", val_sentences, train_video_ids, vocab, max_words)
     _build_cache(dataset, "test", test_sentences, train_video_ids, vocab, max_words)
 
-    with open(os.path.join(_util.getDatasetByName(dataset), "vocab.pkl"), 'wb') as f:
+    with open(os.path.join(_util.getDatasetByName(dataset), Vocabulary.PICKLE_FILE), 'wb') as f:
         pickle.dump(vocab, f)
 
 
