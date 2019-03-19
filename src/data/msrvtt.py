@@ -24,7 +24,9 @@ class MSRVTTDataset(_data.Dataset):
     def __getitem__(self, index):
         video_id = self._video_ids[index]
         feature = torch.from_numpy(self._features[self._vid2idx[video_id]])
-        return feature, self._captions[index], self._lengths[index], video_id
+        captions = torch.from_numpy(self._captions[index])
+        lengths = torch.from_numpy(self._lengths[index])
+        return feature, captions, lengths, video_id
 
     def __len__(self):
         return len(self._captions)
@@ -41,7 +43,8 @@ class VideoDataset(_data.Dataset):
 
     def __getitem__(self, index):
         video_id = self._video_ids[index]
-        return torch.from_numpy(self._features[self._vid2idx[video_id]]), video_id
+        feature = torch.from_numpy(self._features[self._vid2idx[video_id]])
+        return feature, video_id
 
     def __len__(self):
         return len(self._video_ids)
