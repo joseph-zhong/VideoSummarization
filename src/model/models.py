@@ -39,7 +39,7 @@ class AppearanceEncoder(nn.Module):
 
     @staticmethod
     def _get_weights_path():
-        return os.path.join(_util.getWeightsByParams(reuse=True, dataset="imagenet", model="resnet50"), "weights.pth")
+        return os.path.join(_util.get_weights_path_by_param(reuse=True, dataset="imagenet", model="resnet50"), "weights.pth")
 
     @staticmethod
     def feature_size():
@@ -115,7 +115,7 @@ class MotionEncoder(nn.Module):
 
     @staticmethod
     def _get_weights_path():
-        return os.path.join(_util.getWeightsByParams(reuse=True, dataset="sports1m", model="c3d"), "weights.pickle")
+        return os.path.join(_util.get_weights_path_by_param(reuse=True, dataset="sports1m", model="c3d"), "weights.pickle")
 
     @staticmethod
     def feature_size():

@@ -12,7 +12,7 @@ from types import GeneratorType
 
 import src.utils.utility as _util
 
-_logger = _util.getLogger(__file__)
+_logger = _util.get_logger(__file__)
 
 
 def _str_to_bool(s):
