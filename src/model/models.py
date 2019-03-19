@@ -12,6 +12,7 @@ from torch.autograd import Function
 from torchvision.models import resnet50
 
 import src.utils.utility as _util
+import src.train.train_test_utils as _train
 from src.data.caption import Token, vocab
 
 
@@ -282,7 +283,7 @@ class Decoder(nn.Module):
         bsz = d.size(0)
         return d.data.new(bsz, self.hidden_size).zero_()
 
-    def forward(self, video_encoded, captions, teacher_forcing_ratio=0.5):
+    def forward(self, video_encoded, captions, use_cuda=False, teacher_forcing_ratio=0.5):
         """
 
         Args:
@@ -295,6 +296,7 @@ class Decoder(nn.Module):
 
         """
         batch_size = len(video_encoded)
+
         # During inference time, caption-labels are not available.
         infer = True if captions is None else False
         if not infer:
@@ -304,7 +306,19 @@ class Decoder(nn.Module):
         # Initialize GRU state.
         gru_h = self._init_gru_state(video_encoded)
 
-        outputs = []
+        if infer:
+            if use_cuda:
+                outputs = torch.cuda.FloatTensor(self.max_words).fill_(0)
+            else:
+                outputs = torch.FloatTensor(self.max_words).fill_(0)
+            outputs[0] = vocab()[Token.START]
+        else:
+            if use_cuda:
+                outputs = torch.cuda.FloatTensor(self.max_words, batch_size, len(vocab())).fill_(0)
+            else:
+                outputs = torch.FloatTensor(self.max_words, batch_size, len(vocab())).fill_(0)
+
+
         # Append START token to to sentence.
         word_id = vocab()[Token.START]
         word = video_encoded.data.new(batch_size, 1).long().fill_(word_id)
@@ -335,17 +349,16 @@ class Decoder(nn.Module):
             word_logits = self.word_restore(gru_h)
             use_teacher_forcing = not infer and (random.random() < teacher_forcing_ratio)
             if use_teacher_forcing:
-                # teacher forcing模式
                 word_id = captions[:, i].clone()
             else:
-                # 非 teacher forcing模式
                 word_id = word_logits.max(1)[1]
+
             if infer:
-                # 如果是推断模式，直接返回单词id
-                outputs.append(word_id)
+                # In infer mode, use word_id from label.
+                outputs[i] = word_id
             else:
-                # 否则是训练模式，要返回logits
-                outputs.append(word_logits)
+                # Otherwise, generate word from logits.
+                outputs[i] = word_logits
             # Compute word representation.
             word = self.word_embed(word_id).squeeze(1)
             word = self.word_drop(word)
@@ -364,12 +377,18 @@ class Decoder(nn.Module):
 
 class BANet(nn.Module):
     def __init__(self, feature_size, projected_size, mid_size, hidden_size,
-                 max_frames, max_words):
+                 max_frames, max_words, use_cuda):
         super(BANet, self).__init__()
-        self.encoder = Encoder(feature_size, projected_size, mid_size, hidden_size, max_frames)
-        self.decoder = Decoder(hidden_size, projected_size, hidden_size, max_words)
 
-    def forward(self, videos, captions, teacher_forcing_ratio=0.5):
+        encoder = Encoder(feature_size, projected_size, mid_size, hidden_size, max_frames)
+        decoder = Decoder(hidden_size, projected_size, hidden_size, max_words)
+        if use_cuda:
+            encoder = _train.DataParallel(encoder)
+        self.encoder = encoder
+        self.decoder = decoder
+        self.use_cuda = use_cuda
+
+    def forward(self, videos, captions, use_cuda=False, teacher_forcing_ratio=0.5):
         video_encoded = self.encoder(videos)
-        output = self.decoder(video_encoded, captions, teacher_forcing_ratio)
+        output = self.decoder(video_encoded, captions, self.use_cuda, teacher_forcing_ratio)
         return output, video_encoded

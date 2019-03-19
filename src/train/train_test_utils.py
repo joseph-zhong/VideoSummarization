@@ -4,6 +4,7 @@ train_test_utils.py
 
 Training and Test-time Utilities.
 """
+from torch import nn
 
 import src.utils.coco as _coco
 import src.data.msrvtt as _msrvtt
@@ -11,8 +12,10 @@ import src.data.msrvtt as _msrvtt
 from extern.coco_caption.pycocotools.coco import COCO
 from extern.coco_caption.pycocoevalcap.eval import COCOEvalCap
 
+
 def train_step():
     pass
+
 
 def eval_step(eval_loader, banet, prediction_txt_path, reference, use_cuda=False):
     result = {}
@@ -35,6 +38,7 @@ def eval_step(eval_loader, banet, prediction_txt_path, reference, use_cuda=False
     metrics = measure(prediction_txt_path, reference)
     return metrics
 
+
 def measure(prediction_txt_path, reference):
     # 把txt格式的预测结果转换成检验程序所要求的格式
     crf = _coco.CocoResFormat()
@@ -49,3 +53,11 @@ def measure(prediction_txt_path, reference):
     for metric, score in cocoEval.eval.items():
         print('%s: %.3f' % (metric, score))
     return cocoEval.eval
+
+
+class DataParallel(nn.DataParallel):
+    def __getattr__(self, name):
+        module = super(DataParallel, self).__getattr__('module')
+        if name == "module":
+            return module
+        return getattr(module, name)

@@ -43,7 +43,7 @@ def train(
     # General training hyperparameters.
     dataset: str,
     num_epochs: int=100,
-    batch_size: int=100,
+    batch_size: int=128,
 
     # Learning rate schedulers.
     learning_rate: float=3e-4,
@@ -66,7 +66,7 @@ def train(
     max_frames: int=100,  # Maximum length of the video-frame sequence.
     max_words: int=30,  # Maximum length of the caption-word sequence.
 
-    use_cuda: bool=True,
+    use_cuda: bool=False,
     use_ckpt: bool=False,
     seed: int=0,
 ):
@@ -121,15 +121,6 @@ def train(
     optimizer_pth_path = os.path.join(ckpt_path, 'optimizer.pth')
     best_optimizer_pth_path = os.path.join(ckpt_path, 'best_optimizer.pth')
 
-    # Prepare dataset paths.
-    # video_root = './datasets/MSR-VTT/Video/'
-    # anno_json_path = './datasets/MSR-VTT/datainfo.json'
-    # video_sort_lambda = lambda x: int(x[5:-4])
-    # train_range = (0, 6512)
-    # val_range = (6513, 7009)
-    # test_range = (7010, 9999)
-
-    # REVIEW josephz: Make this in msrvtt? load_vocab() using the static PICKLE_FILE?
     # Load Vocabulary.
     vocab_size = len(vocab())
 
@@ -139,21 +130,21 @@ def train(
     # reference = COCO(reference_json_path)
 
     # Initialize the model.
-    banet = _models.BANet(a_feature_size, projected_size, mid_size, hidden_size, max_frames, max_words)
+    banet = _models.BANet(a_feature_size, projected_size, mid_size, hidden_size, max_frames, max_words, use_cuda=use_cuda)
 
     # Load model weights if possible.
-    # if os.path.exists(best_banet_pth_path) and use_ckpt:
-    #     weights = torch.load(best_banet_pth_path)
-    #
-    #     asdf = banet.encoder.state_dict()
-    #     encoder_weights = {k.replace('.encoder', ''):v for k, v in weights.items() if k in asdf}
-    #
-    #     # REVIEW josephz: Figure out how to do the decoder weights partially:
-    #     #   https://discuss.pytorch.org/t/how-to-load-part-of-pre-trained-model/1113/6
-    #     # del weights['decoder.word_embed.weight']
-    #     # del weights['decoder.word_restore.bias']
-    #     # del weights['decoder.word_restore.weight']
-    #     banet.encoder.load_state_dict(encoder_weights)
+    if os.path.exists(best_banet_pth_path) and use_ckpt:
+        weights = torch.load(best_banet_pth_path)
+
+        asdf = banet.encoder.state_dict()
+        encoder_weights = {k.replace('.encoder', ''):v for k, v in weights.items() if k in asdf}
+
+        # REVIEW josephz: Figure out how to do the decoder weights partially:
+        #   https://discuss.pytorch.org/t/how-to-load-part-of-pre-trained-model/1113/6
+        # del weights['decoder.word_embed.weight']
+        # del weights['decoder.word_restore.bias']
+        # del weights['decoder.word_restore.weight']
+        banet.encoder.load_state_dict(encoder_weights)
     if use_cuda:
         banet.cuda()
 
@@ -188,7 +179,7 @@ def train(
         print('epoch:%d\tepsilon:%.8f' % (epoch, epsilon))
         _tb_logger.log_value('epsilon', epsilon, epoch)
 
-        for i, (videos, captions, cap_lens, video_ids) in tqdm.tqdm(enumerate(train_loader, start=1)):
+        for i, (videos, captions, cap_lens, video_ids) in tqdm.tqdm(enumerate(train_loader, start=1), total=num_train_steps):
             if use_cuda:
                 videos = videos.cuda()
                 targets = captions.cuda()
@@ -222,7 +213,7 @@ def train(
             optimizer.step()
 
             # Report Training Progress metrics on loss and perplexity.
-            # if i % 10 == 0 or bsz < batch_size:
+            # if i % 100 == 0 or bsz < batch_size:
             #     loss_count /= 10 if bsz == batch_size else i % 10
             #     print('Epoch [%d/%d], Step [%d/%d], Loss: %.4f, Perplexity: %5.4f' %
             #           (epoch, num_epochs, i, num_train_steps, loss_count, np.exp(loss_count)))
