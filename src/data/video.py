@@ -103,8 +103,12 @@ def extract_features(raw, dataset, mode, frequency=1.0, max_frames=-1, overwrite
     raw_dir = _util.getRawDatasetByName(raw)
     dataset_dir = _util.getDatasetByName(dataset, mode=mode, create=True)
 
-    videos = glob.glob(os.path.join(raw_dir, mode, "*.mp4"))
+    videos = sorted(glob.glob(os.path.join(raw_dir, mode, "*.mp4")))
     assert len(videos) > 0, "Could not find any mp4 videos for {} in {}".format(mode, raw_dir)
+
+    # Verify videos are in the same order as when captions were generated. IMPORTANT.
+    video_ids = _util.loadArray(dataset_dir, "video_ids")
+    assert all(os.path.basename(a)[:-4] == b for a, b in zip(videos, sorted(set(video_ids))))
 
     aencoder = aencoder.cuda(1)
     # mencoder = mencoder#.cuda(0)
@@ -112,7 +116,7 @@ def extract_features(raw, dataset, mode, frequency=1.0, max_frames=-1, overwrite
     num_features = aencoder.feature_size()
 
     features = np.zeros((len(videos), max_frames, num_features), dtype=np.float32)
-    for i, video_path in enumerate(tqdm(sorted(videos))):
+    for i, video_path in enumerate(tqdm(videos)):
         frames, clips = sample_frames(video_path, frequency)
         assert len(frames) <= max_frames, "Cannot fit video {} with {} frames given max_frames {}" \
             .format(os.path.basename(video_path), len(frames), max_frames)
