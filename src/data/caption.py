@@ -127,7 +127,7 @@ class Vocabulary:
         assert isinstance(caption, Iterable)
 
         # str conversion required as some tokens are Tokens, not str.
-        return " ".join(str(self._idx2word[i]) for i in caption)
+        return " ".join(str(self._idx2word[int(i)]) for i in caption)
 
 
 def build_vocabulary(captions, threshold):

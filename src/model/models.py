@@ -308,9 +308,9 @@ class Decoder(nn.Module):
 
         if infer:
             if use_cuda:
-                outputs = torch.cuda.FloatTensor(self.max_words).fill_(0)
+                outputs = torch.cuda.FloatTensor(self.max_words, batch_size).fill_(0)
             else:
-                outputs = torch.FloatTensor(self.max_words).fill_(0)
+                outputs = torch.FloatTensor(self.max_words, batch_size).fill_(0)
             outputs[0] = vocab()[Token.START]
         else:
             if use_cuda:

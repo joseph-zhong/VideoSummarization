@@ -11,6 +11,7 @@ import src.data.msrvtt as _msrvtt
 
 from extern.coco_caption.pycocotools.coco import COCO
 from extern.coco_caption.pycocoevalcap.eval import COCOEvalCap
+from src.data.caption import vocab
 
 
 def train_step():
@@ -25,12 +26,12 @@ def eval_step(eval_loader, banet, prediction_txt_path, reference, use_cuda=False
 
         outputs, _ = banet(videos, None)
         for (tokens, vid) in zip(outputs, video_ids):
-            s = banet.decoder.decode_tokens(tokens.data)
+            s = vocab().decode(tokens.data)
             result[vid] = s
 
     prediction_txt = open(prediction_txt_path, 'w')
     for vid, s in result.items():
-        prediction_txt.write('%d\t%s\n' % (vid, s))  # 注意，MSVD数据集的视频文件名从1开始
+        prediction_txt.write('{}\t{}\n'.format(vid[5:], s))  # 注意，MSVD数据集的视频文件名从1开始
 
     prediction_txt.close()
 
@@ -44,14 +45,14 @@ def measure(prediction_txt_path, reference):
     crf = _coco.CocoResFormat()
     crf.read_file(prediction_txt_path, True)
 
-    # crf.res就是格式转换之后的预测结果
+    # 把txt格式的预测结果转换成检验程序所要求的格式
     cocoRes = reference.loadRes(crf.res)
     cocoEval = COCOEvalCap(reference, cocoRes)
 
     cocoEval.evaluate()
 
     for metric, score in cocoEval.eval.items():
-        print('%s: %.3f' % (metric, score))
+        print('\t%s: %.3f' % (metric, score))
     return cocoEval.eval
 
 

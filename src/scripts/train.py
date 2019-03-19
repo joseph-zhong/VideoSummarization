@@ -31,14 +31,6 @@ from extern.coco_caption.pycocotools.coco import COCO
 
 _logger = _util.get_logger(__file__)
 
-tmp_dir = 'tmp'
-val_reference_txt_path = os.path.join(tmp_dir, 'msr-vtt_val_references.txt')
-val_prediction_txt_path = os.path.join(tmp_dir, 'msr-vtt_val_predictions.txt')
-
-test_reference_txt_path = os.path.join(tmp_dir, 'msr-vtt_test_references.txt')
-test_prediction_txt_path = os.path.join(tmp_dir, 'msr-vtt_test_predictions.txt')
-
-
 def train(
     # General training hyperparameters.
     dataset: str,
@@ -125,9 +117,17 @@ def train(
     vocab_size = len(vocab())
 
     # Load Reference for COCO.
-    # REVIEW josephz: The authors
-    # reference_json_path = '{0}.json'.format(test_reference_txt_path)
-    # reference = COCO(reference_json_path)
+    # val_dir = _util.get_dataset_by_name(dataset, mode='val')
+    # val_reference_txt_path = os.path.join(val_dir, 'reference.json')
+    # val_prediction_txt_path = os.path.join(val_dir, 'prediction.txt')
+    # reference = COCO(val_reference_txt_path)
+
+    eval_mode = 'val'
+    eval_dir = _util.get_dataset_by_name(dataset, mode=eval_mode)
+    test_reference_txt_path = os.path.join(eval_dir, 'reference.json')
+    test_prediction_txt_path = os.path.join(eval_dir, 'prediction.txt')
+    reference = COCO(test_reference_txt_path)
+    print("Evaluating on '{}'".format(eval_dir))
 
     # Initialize the model.
     banet = _models.BANet(a_feature_size, projected_size, mid_size, hidden_size, max_frames, max_words, use_cuda=use_cuda)
@@ -156,7 +156,7 @@ def train(
 
     # Initialize Dataloaders.
     train_loader = _data.get_train_dataloader(dataset, batch_size=batch_size)
-    eval_loader = _data.get_eval_dataloader(dataset, 'val', batch_size=batch_size)
+    eval_loader = _data.get_eval_dataloader(dataset, eval_mode, batch_size=batch_size)
 
     num_train_steps = len(train_loader)
     num_eval_steps = len(eval_loader)
@@ -212,29 +212,28 @@ def train(
             loss.backward()
             optimizer.step()
 
-            # Report Training Progress metrics on loss and perplexity.
-            # if i % 100 == 0 or bsz < batch_size:
-            #     loss_count /= 10 if bsz == batch_size else i % 10
-            #     print('Epoch [%d/%d], Step [%d/%d], Loss: %.4f, Perplexity: %5.4f' %
-            #           (epoch, num_epochs, i, num_train_steps, loss_count, np.exp(loss_count)))
-            #     loss_count = 0
-            #     tokens = banet.decoder.sample(video_encoded)
-            #     tokens = tokens.data[0].squeeze()
-            #
-            #     we = vocab().decode(tokens)
-            #     gt = vocab().decode(captions[0].squeeze())
-            #
-            #     print('\t[vid:{}]'.format(video_ids[0]))
-            #     print('\tWE: {}\nGT: {}'.format(we, gt))
+            eval_steps = 25
+            if i % eval_steps == 0 or bsz < batch_size:
+                loss_count /= eval_steps if bsz == batch_size else i % eval_steps
+                print('Epoch [%d/%d], Step [%d/%d], Loss: %.4f, Perplexity: %5.4f' %
+                      (epoch, num_epochs, i, num_train_steps, loss_count,
+                       np.exp(loss_count)))
+                loss_count = 0
+                tokens = banet.decoder.sample(video_encoded)
+                tokens = tokens.data[0].squeeze()
+                we = vocab().decode(tokens)
+                gt = vocab().decode(captions[0].squeeze())
+                print('[vid:{}]'.format(video_ids[0]))
+                print('WE: %s\nGT: %s' % (we, gt))
 
         # Finally, compute evaluation metrics and save the best models.
         banet.eval()
         print("Computing Metrics:...")
         metrics = _train.eval_step(eval_loader, banet, test_prediction_txt_path, reference, use_cuda=use_cuda)
         for k, v in metrics.items():
-            # _tb_logger.log_value(k, v, epoch)
-            print('\t%s: %.6f' % (k, v))
-            if k == 'METEOR' and v > best_meteor:
+            _tb_logger.log_value(k, v, epoch)
+            # print('\t%s: %.6f' % (k, v))
+            if k == 'ROUGLE_L' and v > best_meteor:
                 # Save the best model based on the METEOR metric.
                 # For reference, see https://www.cs.cmu.edu/~alavie/papers/BanerjeeLavie2005-final.pdf
                 shutil.copy2(banet_pth_path_fmt, best_banet_pth_path)
