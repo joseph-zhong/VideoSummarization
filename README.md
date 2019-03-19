@@ -5,22 +5,31 @@ and Joseph Zhong
 
 ## Introduction
 
+We are building Video Summarization using deep neural networks.
+
+## TOC
+
+- [Pipeline Architecture](#pipeline-architecture): Architecture inspiration.
+- [TODO](#todo): TODO list.
+- [Getting Started](#getting-started): Quick-start guide.
+- [Organization](#organization): Project organization
+- [Discussion](#discussion): Questions to be answered.
+- [Reference](#reference): Reference materials.
+
 ## Pipeline Architecture
 
-We will heavily bootstrap from the
-[LipReading](https://github.com/joseph-zhong/LipReading/) repository, taking
-inspiration from the combined vision-nlp pipeline. 
+We will be bootstrapping heavily from the 
+[Hierarchical Boundary-Aware Neural Encoder for Video Captioning](https://github.com/Yugnaynehc/banet) implementation, 
+and re-posing video-captioning as a video-summarization problem.
 
-Our needs for Video Summarization will be similar, in that we will utilize the
-outputs from an existing generalized object detector to use as inputs to inform
-our video summarizer what content is relevant to summarize.
+We can approach video-captioning using encoder-decoder recurrent neural architectures.
 
 ## TODO
 
 - [x] Download MSR-VTT dataset with available captions
   - Download just the MP4, and VTT, we should be able to process the buffered
     frames
-- [ ] Load Data
+- [x] Load Data
   - Initialize Dataset loaders
     - Download MSRVTT if necessary
   - Initialize Models
@@ -31,7 +40,13 @@ our video summarizer what content is relevant to summarize.
   - Evaluate loss and backprop
 - [ ] Ship
 
-### Development Workflow
+## Getting Started
+
+### Setup
+
+0. Add `VS_WORKSPACE` to point to this repository location.
+
+### Workflow
 
 0. Preprocess dataset by running `./src/data/video.py`
     - We used the following parameters:
@@ -39,11 +54,7 @@ our video summarizer what content is relevant to summarize.
       - `max_frames=100`, maximum frame-sequence length for padding
 1. Run `./scripts/train.py`
 
-## Dev Setup
-
-0. Add `VS_WORKSPACE` to point to this repository location.
-
-### Organization
+## Organization
 
 ```text
 
@@ -120,6 +131,16 @@ our video summarizer what content is relevant to summarize.
 ```
 
 ## Discussion
+
+### Architecture
+
+We will heavily bootstrap from the
+[LipReading](https://github.com/joseph-zhong/LipReading/) repository, taking
+inspiration from the combined vision-nlp pipeline. 
+
+Our needs for Video Summarization will be similar, in that we will utilize the
+outputs from an existing generalized object detector to use as inputs to inform
+our video summarizer what content is relevant to summarize.
 
 ### Sampling Rate
 
