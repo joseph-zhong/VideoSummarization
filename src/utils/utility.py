@@ -74,6 +74,7 @@ def dumpArray(directory: str, name: str, batch: int, arr: np.ndarray, overwrite=
         np.save(os.path.join(path, "{0:04d}".format(num_batches)), arr[-remainder:])
 
 
+@lru_cache(maxsize=8)
 def loadArray(directory: str, name: str) -> np.ndarray:
     assert isinstance(directory, str) and os.path.isdir(directory), "Could not find directory: {}".format(directory)
 
