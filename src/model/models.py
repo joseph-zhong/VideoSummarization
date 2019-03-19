@@ -13,6 +13,7 @@ from torchvision.models import resnet50
 
 import src.utils.utility as _util
 
+
 class AppearanceEncoder(nn.Module):
     def __init__(self):
         super(AppearanceEncoder, self).__init__()
