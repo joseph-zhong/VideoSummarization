@@ -11,7 +11,7 @@ import pickle
 from collections import Sequence
 from enum import Enum
 from functools import lru_cache
-from typing import Union, List, Iterable
+from typing import Union, List, Iterable, Optional
 
 import nltk
 import numpy as np
@@ -35,10 +35,10 @@ class Token(Enum):
         return self.value
 
 
-def vocab(dataset="MSRVTT"):
+def vocab(dataset: Optional[str] ="MSRVTT", threshold: int =3):
     if vocab.inst is None:
         if dataset is None:
-            vocab.inst = Vocabulary()
+            vocab.inst = Vocabulary(threshold)
         else:
             dataset_dir = _util.get_dataset_by_name(dataset)
             with open(os.path.join(dataset_dir, Vocabulary.PICKLE_FILE), 'rb') as f:
@@ -55,7 +55,7 @@ class Vocabulary:
     Represents an NLP vocabulary. Given all words in a corpus, it will identify all unique words and
     will return a word's unique index on __getitem__. This is a singleton class.
     """
-    def __init__(self, threshold: int = 3):
+    def __init__(self, threshold: int):
         """
         Creates a Vocabulary with the given threshold.
         :param threshold: Number of occurrences under which words will be ignored.
@@ -126,8 +126,12 @@ class Vocabulary:
         """
         assert isinstance(caption, Iterable)
 
+        caption = list(caption)
+        end_idx = self[Token.END]
+        last_idx = caption.index(end_idx) + 1 if end_idx in caption else len(caption)
+
         # str conversion required as some tokens are Tokens, not str.
-        return " ".join(str(self._idx2word[int(i)]) for i in caption)
+        return " ".join(str(self._idx2word[int(i)]) for i in caption[:last_idx])
 
 
 def build_vocabulary(captions, threshold):
@@ -135,16 +139,16 @@ def build_vocabulary(captions, threshold):
 
     _logger.info("Building vocabulary from {} captions with unk threshold {}".format(len(captions), threshold))
 
-    vocab = Vocabulary(threshold)
+    voc = vocab(dataset=None, threshold=threshold)
     for caption in tqdm(captions):
         tokens = nltk.tokenize.word_tokenize(caption)
 
         for token in tokens:
-            vocab.add(token)
+            voc.add(token)
 
     _logger.info("Built vocabulary with {} tokens from {} unique tokens ({:.2f}% reduction)"
-                 .format(len(vocab), vocab.num_tokens, 100 - 100. * len(vocab) / vocab.num_tokens))
-    return vocab
+                 .format(len(voc), voc.num_tokens, 100 - 100. * len(voc) / voc.num_tokens))
+    return voc
 
 
 def _build_cache(dataset: str, mode: str, sentences: List[str], video_ids: List[str], vocab: Vocabulary, max_words: int,
@@ -178,6 +182,8 @@ def _build_cache(dataset: str, mode: str, sentences: List[str], video_ids: List[
     _util.dump_array(dataset_dir, "captions", 10000, captions, overwrite=overwrite)
     _util.dump_array(dataset_dir, "cap_lens", 100000, cap_lens, overwrite=overwrite)
     _util.dump_array(dataset_dir, "video_ids", 100000, video_ids, overwrite=overwrite)
+
+    return captions
 
 
 def build_cache(raw: str, dataset: str, threshold: int, max_words: int, train_fraction: float = 1., overwrite: bool = False) -> None:
@@ -240,8 +246,8 @@ def build_cache(raw: str, dataset: str, threshold: int, max_words: int, train_fr
     _logger.info("Using {} of {} total train sentences".format(last_train_idx, len(train_ann["sentences"])))
 
     _build_cache(dataset, "train", train_sentences[:last_train_idx], train_video_ids[:last_train_idx], vocab, max_words, overwrite)
-    _build_cache(dataset, "val", val_sentences, val_video_ids, vocab, max_words, overwrite)
-    _build_cache(dataset, "test", test_sentences, test_video_ids, vocab, max_words, overwrite)
+    val_sentences = _build_cache(dataset, "val", val_sentences, val_video_ids, vocab, max_words, overwrite)
+    test_sentences = _build_cache(dataset, "test", test_sentences, test_video_ids, vocab, max_words, overwrite)
 
     with open(os.path.join(_util.get_dataset_by_name(dataset), Vocabulary.PICKLE_FILE), 'wb') as f:
         pickle.dump(vocab, f)
@@ -251,11 +257,13 @@ def build_cache(raw: str, dataset: str, threshold: int, max_words: int, train_fr
 
 
 def prepare_gt(path, sentences, video_ids):
+    assert isinstance(sentences, np.ndarray)
+
     _logger.info("Outputting ground truth to {}".format(path))
     with open(path, 'w') as f_out:
         for sentence, video_id in zip(sentences, video_ids):
             video_id = int(video_id[5:])
-            ground_truth = "{}\t{}\n".format(video_id, sentence)
+            ground_truth = "{}\t{}\n".format(video_id, vocab().decode(sentence))
             f_out.write(ground_truth)
 
     _coco.create_reference_json(path)
