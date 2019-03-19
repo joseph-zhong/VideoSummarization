@@ -90,19 +90,18 @@ class Vocabulary(metaclass=Singleton):
         """
         Add a word to this vocabulary if it does not already exist.
         :param word: Word as a string or Token.
+        :param inc: Number of times this word has appeared since last call.
         """
         assert isinstance(word, (str, Token))
         if isinstance(word, str):
             word = word.lower()
 
-        if word not in self._word2idx:
-            self._word2idx[word] = len(self._idx2word)
-            self._idx2word.append(word)
-
         count = self._word2count.get(word, 0)
         self._word2count[word] = count + inc
 
         if count < self._threshold <= count + inc:
+            self._word2idx[word] = len(self._idx2word)
+            self._idx2word.append(word)
             self._nwords += 1
 
     @lru_cache(maxsize=256)
