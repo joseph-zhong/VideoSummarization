@@ -31,6 +31,9 @@ class Token(Enum):
     PAD = "<pad>"
     UNK = "<unk>"
 
+    def __str__(self):
+        return self.value
+
 
 class Vocabulary:
     PICKLE_FILE = "vocab.pkl"
@@ -120,7 +123,8 @@ def build_vocabulary(captions, threshold):
     return vocab
 
 
-def _build_cache(dataset: str, mode: str, sentences: List[str], video_ids: List[str], vocab: Vocabulary, max_words: int) -> None:
+def _build_cache(dataset: str, mode: str, sentences: List[str], video_ids: List[str], vocab: Vocabulary, max_words: int,
+                 overwrite: bool) -> None:
     dataset_dir = _util.getDatasetByName(dataset, mode, create=True)
 
     captions = []
@@ -133,7 +137,7 @@ def _build_cache(dataset: str, mode: str, sentences: List[str], video_ids: List[
         cap_lens.append(len(caption) + 1)  # plus one for Token.END
 
         if len(caption) >= max_words:
-            _logger.warn("Truncating caption {} from {} words to {}".format(i, len(caption) - 1, max_words))
+            _logger.warn("Truncating caption {} from {} words to {}".format(i, len(caption) + 1, max_words))
             caption = caption[:max_words - 1]
         caption.append(vocab[Token.END])
 
@@ -147,12 +151,12 @@ def _build_cache(dataset: str, mode: str, sentences: List[str], video_ids: List[
     video_ids = np.array(video_ids)
 
     _logger.info("Saving cache...")
-    _util.dumpArray(dataset_dir, "captions", 10000, captions, overwrite=True)
-    _util.dumpArray(dataset_dir, "cap_lens", 100000, cap_lens, overwrite=True)
-    _util.dumpArray(dataset_dir, "video_ids", 100000, video_ids, overwrite=True)
+    _util.dumpArray(dataset_dir, "captions", 10000, captions, overwrite=overwrite)
+    _util.dumpArray(dataset_dir, "cap_lens", 100000, cap_lens, overwrite=overwrite)
+    _util.dumpArray(dataset_dir, "video_ids", 100000, video_ids, overwrite=overwrite)
 
 
-def build_cache(raw: str, dataset: str, threshold: int, max_words: int) -> None:
+def build_cache(raw: str, dataset: str, threshold: int, max_words: int, train_fraction: float = 1., overwrite: bool = False) -> None:
     """
     Builds caption cache files for a raw dataset based on annotations.json.
 
@@ -160,9 +164,12 @@ def build_cache(raw: str, dataset: str, threshold: int, max_words: int) -> None:
     :param dataset: Dataset in which to place the resultant cache files.
     :param threshold: Number of occurrences under which a token will be unk'd.
     :param max_words: Maximum number of allowable words in a caption (will pad to this length).
+    :param train_fraction: Amount of training annotations to use, defaults to 1.0 (all of train).
+    :param overwrite: Unless this flag is specified, will fail rather than overwrite existing cache.
     """
     assert isinstance(raw, str)
     assert isinstance(dataset, str)
+    assert isinstance(train_fraction, float) and 0 < train_fraction <= 1.
     assert isinstance(max_words, int) and max_words > 0, "max_words must be a positive integer"
 
     train_dir = _util.getRawDatasetByName(raw, mode="train")
@@ -204,9 +211,12 @@ def build_cache(raw: str, dataset: str, threshold: int, max_words: int) -> None:
 
     vocab = build_vocabulary(train_sentences + val_sentences + test_sentences, threshold)
 
-    _build_cache(dataset, "train", train_sentences, train_video_ids, vocab, max_words)
-    _build_cache(dataset, "val", val_sentences, train_video_ids, vocab, max_words)
-    _build_cache(dataset, "test", test_sentences, train_video_ids, vocab, max_words)
+    last_train_idx = int(len(train_ann["sentences"]) * train_fraction)
+    _logger.info("Using {} of {} total train sentences".format(last_train_idx, len(train_ann["sentences"])))
+
+    _build_cache(dataset, "train", train_sentences[:last_train_idx], train_video_ids[:last_train_idx], vocab, max_words, overwrite)
+    _build_cache(dataset, "val", val_sentences, val_video_ids, vocab, max_words, overwrite)
+    _build_cache(dataset, "test", test_sentences, test_video_ids, vocab, max_words, overwrite)
 
     with open(os.path.join(_util.getDatasetByName(dataset), Vocabulary.PICKLE_FILE), 'wb') as f:
         pickle.dump(vocab, f)

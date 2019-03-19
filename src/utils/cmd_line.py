@@ -51,7 +51,7 @@ def parseArgsForClassOrScript(fn):
         # REVIEW josephz: Is there a better way to determine if it is a positional/required argument?
         required = arg.default is inspect.Parameter.empty
         default = arg.default if arg.default is not inspect.Parameter.empty else None
-        type_ = arg.annotation if arg.annotation is not inspect.Parameter.empty else str
+        type_ = arg.annotation if arg.annotation is not inspect.Parameter.empty else type(default) if default is not None else str
 
         if type_ is bool:
             # REVIEW josephz: This currently has a serious flaw in that clients may only set positive boolean flags.
