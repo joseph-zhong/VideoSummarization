@@ -11,7 +11,7 @@ import pickle
 from collections import Sequence
 from enum import Enum
 from functools import lru_cache
-from typing import Union, List
+from typing import Union, List, Iterable
 
 import numpy as np
 
@@ -113,6 +113,17 @@ class Vocabulary(metaclass=Singleton):
         :return: Number of tokens in this vocabulary including unk'd tokens.
         """
         return len(self._word2count)
+
+    def decode(self, caption: Iterable[int]) -> str:
+        """
+        Decodes an iterable of token indices into a human-readable string.
+        :param caption: iterable of token indices.
+        :return: human-readable string form.
+        """
+        assert isinstance(caption, Iterable)
+
+        # str conversion required as some tokens are Tokens, not str.
+        return " ".join(str(self._idx2word[i]) for i in caption)
 
 
 def build_vocabulary(captions, threshold):
