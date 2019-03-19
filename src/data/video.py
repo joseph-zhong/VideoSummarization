@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-
 """
+video.py
+---
+
 Utilities for loading video datasets and building video feature vectors
 """
 import glob
@@ -17,8 +19,6 @@ from tqdm import tqdm
 import src.utils.cmd_line as _cmd
 import src.utils.utility as _util
 from src.model.models import MotionEncoder, AppearanceEncoder
-
-_logger = _util.getLogger(__file__)
 
 
 def sample_frames(video_path, frequency):
@@ -131,6 +131,7 @@ def extract_features(raw, dataset, mode, frequency=1.0, max_frames=-1, aencoder=
         features[i, :frames.shape[0], :] = af  #np.concatenate([af, mf], axis=1)
 
     _util.dumpArray(dataset_dir, "frames", 100, features)
+    return features
 
 
 def main():
@@ -138,6 +139,7 @@ def main():
     args = _cmd.parseArgsForClassOrScript(extract_features)
     varsArgs = vars(args)
     verbosity = varsArgs.pop('verbosity', _util.DEFAULT_VERBOSITY)
+    _logger = _util.getLogger(__file__, verbosity=verbosity)
     _logger.info("Passed arguments: '{}'".format(varsArgs))
     extract_features(**varsArgs)
 
