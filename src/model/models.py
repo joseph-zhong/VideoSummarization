@@ -12,6 +12,7 @@ from torch.autograd import Function
 from torchvision.models import resnet50
 
 import src.utils.utility as _util
+from src.data.caption import Token
 
 
 class AppearanceEncoder(nn.Module):
@@ -266,10 +267,11 @@ class Decoder(nn.Module):
 
         self.word_embed = nn.Embedding(self.vocab_size, projected_size)
         self.word_drop = nn.Dropout(p=0.5)
-        # 文章中的GRU是有三个输入的，除了输入GRU的上一个隐层状态
-        # 还需要输入视频特征和单词特征这两个维度的特征
-        # 但是标准的GRU只接受两个输入
-        # 因此在GRU之外先使用两个全连接层把两个维度的特征合并成一维
+
+        # The GRU in the paper has three inputs, except the last hidden layer state of the input GRU.
+        # Also need to enter the characteristics of the two dimensions of video features and word features
+        # But the standard GRU only accepts two inputs
+        # Therefore, using two fully connected layers to merge two dimensional features into one dimension outside the GRU
         self.v2m = nn.Linear(encoded_size, projected_size)
         self.w2m = nn.Linear(projected_size, projected_size)
         self.gru_cell = nn.GRUCell(projected_size, hidden_size)
@@ -281,6 +283,17 @@ class Decoder(nn.Module):
         return d.data.new(bsz, self.hidden_size).zero_()
 
     def forward(self, video_encoded, captions, teacher_forcing_ratio=0.5):
+        """
+
+        Args:
+            video_encoded:
+            captions (torch.LongTensor [max_vid_len, max_cap_len]): Caption indices.
+            teacher_forcing_ratio:
+
+        Returns:
+
+
+        """
         batch_size = len(video_encoded)
         # 根据是否传入caption判断是否是推断模式
         infer = True if captions is None else False
@@ -289,14 +302,15 @@ class Decoder(nn.Module):
 
         outputs = []
         # 先送一个<start>标记
-        word_id = self.vocab('<start>')
+        word_id = self.vocab[Token.START]
         word = video_encoded.data.new(batch_size, 1).long().fill_(word_id)
         word = self.word_embed(word).squeeze(1)
         word = self.word_drop(word)
 
         vm = self.v2m(video_encoded)
         for i in range(self.max_words):
-            if not infer and captions[:, i].data.sum() == 0:
+            if not infer and all(x == vocab[Token.PAD] for x in captions[:, i].data):
+                # If all the word ids are Token.PAD, then we have hit the end of the sentence.
                 # <pad>的id是0，如果所有的word id都是0，
                 # 意味着所有的句子都结束了，没有必要再算了
                 break
@@ -340,7 +354,7 @@ class Decoder(nn.Module):
         '''
         words = []
         for token in tokens:
-            if token == self.vocab('<end>'):
+            if token == self.vocab[Token.END]:
                 break
             word = self.vocab.idx2word[token]
             words.append(word)

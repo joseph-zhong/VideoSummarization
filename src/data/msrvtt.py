@@ -4,6 +4,8 @@ msrvtt.py
 
 Defines MSRVTT dataset.
 """
+
+import numpy as np
 import torch
 import torch.utils.data as _data
 
@@ -25,7 +27,6 @@ class MSRVTTDataset(_data.Dataset):
         video_id = self._video_ids[index]
         feature = torch.from_numpy(self._features[self._vid2idx[video_id]])
         captions = torch.from_numpy(self._captions[index])
-        lengths = torch.from_numpy(self._lengths[index])
         return feature, captions, lengths, video_id
 
     def __len__(self):
@@ -60,7 +61,7 @@ def train_collate_fn(data):
     videos = torch.stack(videos, 0)
 
     # Merge captions together. Turns 1D sequence into 2D.
-    captions = torch.stack(captions, 0)
+    captions = torch.stack(captions, dim=0)
     return videos, captions, lengths, video_ids
 
 

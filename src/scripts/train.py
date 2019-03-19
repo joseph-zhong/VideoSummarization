@@ -128,8 +128,9 @@ def train(
     # val_range = (6513, 7009)
     # test_range = (7010, 9999)
 
+    # REVIEW josephz: Make this in msrvtt? load_vocab() using the static PICKLE_FILE?
     # Load Vocabulary.
-    vocab_pkl_path = os.path.join(_util.getDatasetByName('MSRVTT', mode=None), 'vocab.pkl')
+    vocab_pkl_path = os.path.join(_util.get_dataset_by_name('MSRVTT'), Vocabulary.PICKLE_FILE)
     assert os.path.isfile(vocab_pkl_path), "File not found: '{}'".format(vocab_pkl_path)
     with open(vocab_pkl_path, 'rb') as fin:
         vocab = pickle.load(fin)
@@ -156,8 +157,8 @@ def train(
     #     # del weights['decoder.word_restore.bias']
     #     # del weights['decoder.word_restore.weight']
     #     banet.encoder.load_state_dict(encoder_weights)
-    # if use_cuda:
-    #     banet.cuda()
+    if use_cuda:
+        banet.cuda()
 
     # Initialize loss and optimizer.
     criterion = torch.nn.CrossEntropyLoss()
@@ -186,7 +187,7 @@ def train(
     best_meteor = 0
     loss_count = 0
     for epoch in range(num_epochs):
-        epsilon = max(0.6, ss_factor / (ss_factor + np.exp(epoch / ss_factor)))
+        epsilon = max(min_ss, ss_factor / (ss_factor + np.exp(epoch / ss_factor)))
         print('epoch:%d\tepsilon:%.8f' % (epoch, epsilon))
         _tb_logger.log_value('epsilon', epsilon, epoch)
 
