@@ -246,8 +246,8 @@ def build_cache(raw: str, dataset: str, threshold: int, max_words: int, train_fr
     with open(os.path.join(_util.get_dataset_by_name(dataset), Vocabulary.PICKLE_FILE), 'wb') as f:
         pickle.dump(vocab, f)
 
-    prepare_gt(os.path.join(val_dir, "reference.json"), val_sentences, val_video_ids)
-    prepare_gt(os.path.join(test_dir, "reference.json"), test_sentences, test_video_ids)
+    prepare_gt(os.path.join(_util.get_dataset_by_name(dataset, mode="val"), "reference.json"), val_sentences, val_video_ids)
+    prepare_gt(os.path.join(_util.get_dataset_by_name(dataset, mode="test"), "reference.json"), test_sentences, test_video_ids)
 
 
 def prepare_gt(path, sentences, video_ids):
