@@ -60,8 +60,7 @@ class CocoResFormat:
 
 
 def create_reference_json(reference_txt_path):
-    output_file = '{}.json'.format(reference_txt_path)
     crf = CocoAnnotations()
     crf.read_file(reference_txt_path)
-    crf.dump_json(output_file)
-    print("Created json references in {}".format(output_file))
+    crf.dump_json(reference_txt_path)
+    print("Created json references in {}".format(reference_txt_path))
