@@ -13,6 +13,8 @@ import sys
 import json
 import hashlib
 
+from extern.banet.utils import CocoAnnotations
+
 
 class CocoResFormat:
 
@@ -55,3 +57,11 @@ class CocoResFormat:
     def dump_json(self, outfile):
         with open(outfile, 'w') as fd:
             json.dump(self.res, fd, ensure_ascii=False, sort_keys=True, indent=2, separators=(',', ': '))
+
+
+def create_reference_json(reference_txt_path):
+    output_file = '{}.json'.format(reference_txt_path)
+    crf = CocoAnnotations()
+    crf.read_file(reference_txt_path)
+    crf.dump_json(output_file)
+    print("Created json references in {}".format(output_file))
