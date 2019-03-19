@@ -24,6 +24,7 @@ import src.train.train_test_utils as _train
 
 import src.utils.utility as _util
 import src.utils.cmd_line as _cmd
+from extern.banet.caption import Vocabulary
 
 from extern.coco_caption.pycocotools.coco import COCO
 
@@ -90,13 +91,21 @@ def train(
         use_ckpt (bool): Flag on whether to load checkpoint if possible.
         seed (int): Random seed.
     """
+    # Set seeds.
+    torch.random.manual_seed(seed)
+    np.random.seed(seed)
+
     # Prepare output paths.
-    params = {arg_name: arg.default for arg_name, arg in inspect.signature(train).parameters.items()}
-    ckpt_path = _util.getWeightsByParams(params=params)
-    print("Saving checkpoints to '{ckpt_path}', you may visualize in tensorboard with the following: \n\t`tensorboard --logdir={ckpt_path}`".format(
+    # REVIEW josephz: This is unbelievably hacky, but we want an easy way to allow the user to set and track
+    #   hyperparameters using the cmd_line interface? This should probably be abstracted in utility.py.
+    hparams = locals()
+    params = {arg_name: hparams[arg_name] for arg_name in inspect.signature(train).parameters.keys()}
+    ckpt_path = _util.getWeightsByParams(reuse=True, **params)
+    print("Saving checkpoints to '{ckpt_path}', you may visualize in tensorboard with the following: \n\n\t`tensorboard --logdir={ckpt_path}`\n".format(
         ckpt_path=ckpt_path))
-    banet_pth_path = os.path.join(ckpt_path, 'msr-vtt_banet.pth')
-    best_banet_pth_path = os.path.join(ckpt_path, 'msr-vtt_best_banet.pth')
+
+    banet_pth_path_fmt = os.path.join(ckpt_path, '{:04d}_{:04d}.pth')
+    best_banet_pth_path = os.path.join(ckpt_path, 'weights.pth')
     optimizer_pth_path = os.path.join(ckpt_path, 'msr-vtt_optimizer.pth')
     best_optimizer_pth_path = os.path.join(ckpt_path, 'msr-vtt_best_optimizer.pth')
 
@@ -112,7 +121,7 @@ def train(
     if not os.path.exists(feat_dir):
         os.mkdir(feat_dir)
 
-    vocab_pkl_path = os.path.join(feat_dir, 'msr-vtt_vocab.pkl')
+    vocab_pkl_path = os.path.join(feat_dir, 'vocab.pkl')
     caption_pkl_path = os.path.join(feat_dir, 'msr-vtt_captions.pkl')
     caption_pkl_base = os.path.join(feat_dir, 'msr-vtt_captions')
     train_caption_pkl_path = caption_pkl_base + '_train.pkl'
@@ -129,17 +138,28 @@ def train(
     vocab_size = len(vocab)
 
     # Load Reference for COCO.
-    reference_json_path = '{0}.json'.format(test_reference_txt_path)
-    reference = COCO(reference_json_path)
+    # REVIEW josephz: The authors
+    # reference_json_path = '{0}.json'.format(test_reference_txt_path)
+    # reference = COCO(reference_json_path)
 
     # Initialize the model.
     banet = _models.BANet(a_feature_size, projected_size, mid_size, hidden_size, max_frames, max_words, vocab)
 
     # Load model weights if possible.
-    if os.path.exists(banet_pth_path) and use_ckpt:
-        banet.load_state_dict(torch.load(banet_pth_path))
-    if use_cuda:
-        banet.cuda()
+    # if os.path.exists(best_banet_pth_path) and use_ckpt:
+    #     weights = torch.load(best_banet_pth_path)
+    #
+    #     asdf = banet.encoder.state_dict()
+    #     encoder_weights = {k.replace('.encoder', ''):v for k, v in weights.items() if k in asdf}
+    #
+    #     # REVIEW josephz: Figure out how to do the decoder weights partially:
+    #     #   https://discuss.pytorch.org/t/how-to-load-part-of-pre-trained-model/1113/6
+    #     # del weights['decoder.word_embed.weight']
+    #     # del weights['decoder.word_restore.bias']
+    #     # del weights['decoder.word_restore.weight']
+    #     banet.encoder.load_state_dict(encoder_weights)
+    # if use_cuda:
+    #     banet.cuda()
 
     # Initialize loss and optimizer.
     criterion = torch.nn.CrossEntropyLoss()
@@ -148,8 +168,8 @@ def train(
         optimizer.load_state_dict(torch.load(optimizer_pth_path))
 
     # Initialize Dataloaders.
-    train_loader = _data.get_train_loader(train_caption_pkl_path, feature_h5_path, batch_size)
-    eval_loader = _data.get_eval_loader(val_range, feature_h5_path)
+    train_loader = _data.get_train_dataloader(_data.MSRVTTDataset('MSRVTT', 'train'), batch_size=batch_size)
+    eval_loader = _data.get_eval_loader(_data.MSRVTTDataset('MSRVTT', 'val'), batch_size=batch_size)
 
     num_train_steps = len(train_loader)
     num_eval_steps = len(eval_loader)
@@ -222,7 +242,7 @@ def train(
             if k == 'METEOR' and v > best_meteor:
                 # Save the best model based on the METEOR metric.
                 # For reference, see https://www.cs.cmu.edu/~alavie/papers/BanerjeeLavie2005-final.pdf
-                shutil.copy2(banet_pth_path, best_banet_pth_path)
+                shutil.copy2(banet_pth_path_fmt, best_banet_pth_path)
                 shutil.copy2(optimizer_pth_path, best_optimizer_pth_path)
                 best_meteor = v
         banet.train()

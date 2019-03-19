@@ -46,3 +46,34 @@ class MSRVTTDataset(data.Dataset):
 
     def __len__(self):
         return len(self._captions)
+
+
+def train_collate_fn(data):
+    '''
+    用来把多个数据样本合并成一个minibatch的函数
+    '''
+    # 根据video的长度对数据进行排序
+    data.sort(key=lambda x: x[-1], reverse=True)
+
+    videos, captions, lengths, video_ids = zip(*data)
+
+    # 把视频合并在一起（把2D Tensor的序列变成3D Tensor）
+    videos = torch.stack(videos, 0)
+
+    # 把caption合并在一起（把1D Tensor的序列变成一个2D Tensor）
+    captions = torch.stack(captions, 0)
+    return videos, captions, lengths, video_ids
+
+
+def eval_collate_fn(data):
+    '''
+    用来把多个数据样本合并成一个minibatch的函数
+    '''
+    data.sort(key=lambda x: x[-1], reverse=True)
+
+    videos, video_ids = zip(*data)
+
+    # 把视频合并在一起（把2D Tensor的序列变成3D Tensor）
+    videos = torch.stack(videos, 0)
+
+    return videos, video_ids

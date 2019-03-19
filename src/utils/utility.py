@@ -172,5 +172,5 @@ def getWeightsByParams(reuse=False, overwrite=False, **params: Any) -> str:
 
 @lru_cache(maxsize=1)
 def getWorkspace() -> str:
-    assert 'VS_WORKSPACE' in os.environ
+    assert 'VS_WORKSPACE' in os.environ, "ENV variable 'VS_WORKSPACE' must be set to the repository root"
     return os.environ['VS_WORKSPACE']
