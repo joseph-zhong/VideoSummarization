@@ -48,14 +48,14 @@ We can approach video-captioning using encoder-decoder recurrent neural architec
 
 ### Workflow
 
-0. Preprocess videos by running `./src/data/video.py`
-    - We used the following parameters:
-      - `frequency=0.3`, or about downsampling to 5fps from 15 fps video
-      - `max_frames=100`, maximum frame-sequence length for padding
-1. Preprocess captions by running `./src/data/caption.py`
+0. Preprocess captions by running `./src/data/caption.py`
     - We used the following parameters:
       - `threshold=3`
       - `max_words=30`
+1. Preprocess videos by running `./src/data/video.py`
+    - We used the following parameters:
+      - `frequency=0.3`, or about downsampling to 5fps from 15 fps video
+      - `max_frames=100`, maximum frame-sequence length for padding
 2. Run `./scripts/train.py`
 
 ## Organization
