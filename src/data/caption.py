@@ -35,7 +35,16 @@ class Token(Enum):
         return self.value
 
 
-class Vocabulary:
+class Singleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
+class Vocabulary(metaclass=Singleton):
     PICKLE_FILE = "vocab.pkl"
     """
     Represents an NLP vocabulary. Given all words in a corpus, it will identify all unique words and
