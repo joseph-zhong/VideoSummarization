@@ -96,6 +96,7 @@ def extract_features(raw, dataset, mode, frequency=1.0, max_frames=-1, overwrite
     assert isinstance(dataset, str)
     assert isinstance(mode, str) and mode == "train" or mode == "val" or mode == "test", \
         "Extraction mode must be train, val, or test got {}".format(mode)
+    assert isinstance(frequency, float) and 0 < frequency <= 1.
     assert isinstance(max_frames, int) and max_frames > 0, "max_frame must be a positive integer"
     assert isinstance(aencoder, nn.Module)
     assert isinstance(mencoder, nn.Module)
@@ -103,12 +104,11 @@ def extract_features(raw, dataset, mode, frequency=1.0, max_frames=-1, overwrite
     raw_dir = _util.get_raw_dataset_by_name(raw)
     dataset_dir = _util.get_dataset_by_name(dataset, mode=mode, create=True)
 
-    videos = sorted(glob.glob(os.path.join(raw_dir, mode, "*.mp4")))
-    assert len(videos) > 0, "Could not find any mp4 videos for {} in {}".format(mode, raw_dir)
+    video_ids = sorted(set(_util.load_array(dataset_dir, "video_ids")))
+    videos = [os.path.join(raw_dir, mode, "{}.mp4".format(video_id)) for video_id in video_ids]
 
-    # Verify videos are in the same order as when captions were generated. IMPORTANT.
-    video_ids = _util.load_array(dataset_dir, "video_ids")
-    assert all(os.path.basename(a)[:-4] == b for a, b in zip(videos, sorted(set(video_ids))))
+    for video_path in videos:
+        assert os.path.exists(video_path), "Cannot find mp4 video @ {}".format(video_path)
 
     aencoder = aencoder.cuda(1)
     # mencoder = mencoder#.cuda(0)
