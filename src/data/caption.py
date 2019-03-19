@@ -54,9 +54,9 @@ class Vocabulary:
         self._idx2word = []
         self._nwords = 0
 
+        self.add(Token.PAD, threshold)
         self.add(Token.START, threshold)
         self.add(Token.END, threshold)
-        self.add(Token.PAD, threshold)
         self.add(Token.UNK, threshold)
 
     def add(self, word: Union[str, Token], inc: int = 1) -> None:
