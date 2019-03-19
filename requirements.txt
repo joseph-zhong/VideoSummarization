@@ -7,3 +7,4 @@ nltk
 h5py
 pandas
 tensorboard_logger
+opencv-python
