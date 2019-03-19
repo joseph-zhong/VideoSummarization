@@ -36,6 +36,7 @@ def train(
     dataset: str,
     num_epochs: int=100,
     batch_size: int=128,
+    pretrained_run: int=-1,
 
     # Learning rate schedulers.
     learning_rate: float=3e-4,
@@ -68,6 +69,9 @@ def train(
         dataset (str): Dataset to train on.
         num_epochs (int): Number of epochs to train for.
         batch_size (int): Batch size to train with.
+        pretrained_run (int): Int representing the run to load pre-trained weights from.
+            Set to -1 by default to disable loading pre-trained weights.
+
         learning_rate (float): Learning rate.
         ss_factor (int): Scheduled Sampling factor, to compute a teacher-forcing ratio.
         min_ss (float): Minimum teacher-forcing ratio.
@@ -98,6 +102,7 @@ def train(
     #   hyperparameters using the cmd_line interface? This should probably be abstracted in utility.py.
     hparams = locals()
     params = {arg_name: hparams[arg_name] for arg_name in inspect.signature(train).parameters.keys()}
+
     ckpt_path = _util.get_weights_path_by_param(reuse=False, **params)
     print("Saving checkpoints to '{ckpt_path}', you may visualize in tensorboard with the following: \n\n\t`tensorboard --logdir={ckpt_path}`\n".format(
         ckpt_path=ckpt_path))
@@ -133,11 +138,9 @@ def train(
     banet = _models.BANet(a_feature_size, projected_size, mid_size, hidden_size, max_frames, max_words, use_cuda=use_cuda)
 
     # Load model weights if possible.
-    if os.path.exists(best_banet_pth_path) and use_ckpt:
-        weights = torch.load(best_banet_pth_path)
-
-        # asdf = banet.encoder.state_dict()
-        # encoder_weights = {k.replace('.encoder', ''):v for k, v in weights.items() if k in asdf}
+    if use_ckpt:
+        pretrained_path = os.path.join(_util.get_raw_dataset_by_name('MSRVTT'), 'pretrained_weights.pth')
+        weights = torch.load(pretrained_path)
 
         # REVIEW josephz: Figure out how to do the decoder weights partially:
         #   https://discuss.pytorch.org/t/how-to-load-part-of-pre-trained-model/1113/6
