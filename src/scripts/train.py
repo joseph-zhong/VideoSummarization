@@ -110,27 +110,16 @@ def train(
     best_optimizer_pth_path = os.path.join(ckpt_path, 'msr-vtt_best_optimizer.pth')
 
     # Prepare dataset paths.
-    video_root = './datasets/MSR-VTT/Video/'
-    anno_json_path = './datasets/MSR-VTT/datainfo.json'
-    video_sort_lambda = lambda x: int(x[5:-4])
-    train_range = (0, 6512)
-    val_range = (6513, 7009)
-    test_range = (7010, 9999)
+    # video_root = './datasets/MSR-VTT/Video/'
+    # anno_json_path = './datasets/MSR-VTT/datainfo.json'
+    # video_sort_lambda = lambda x: int(x[5:-4])
+    # train_range = (0, 6512)
+    # val_range = (6513, 7009)
+    # test_range = (7010, 9999)
 
-    feat_dir = 'feats'
-    if not os.path.exists(feat_dir):
-        os.mkdir(feat_dir)
-
-    vocab_pkl_path = os.path.join(feat_dir, 'vocab.pkl')
-    caption_pkl_path = os.path.join(feat_dir, 'msr-vtt_captions.pkl')
-    caption_pkl_base = os.path.join(feat_dir, 'msr-vtt_captions')
-    train_caption_pkl_path = caption_pkl_base + '_train.pkl'
-    val_caption_pkl_path = caption_pkl_base + '_val.pkl'
-    test_caption_pkl_path = caption_pkl_base + '_test.pkl'
-
-    feature_h5_path = os.path.join(feat_dir, 'msr-vtt_features.h5')
-    feature_h5_feats = 'feats'
-    feature_h5_lens = 'lens'
+    # Load Vocabulary.
+    vocab_pkl_path = os.path.join(_util.getDatasetByName('MSRVTT', mode=None), 'vocab.pkl')
+    assert os.path.isfile(vocab_pkl_path), "File not found: '{}'".format(vocab_pkl_path)
 
     # Load vocabulary for the particular dataset.
     with open(vocab_pkl_path, 'rb') as fin:
@@ -169,7 +158,7 @@ def train(
 
     # Initialize Dataloaders.
     train_loader = _data.get_train_dataloader(_data.MSRVTTDataset('MSRVTT', 'train'), batch_size=batch_size)
-    eval_loader = _data.get_eval_loader(_data.MSRVTTDataset('MSRVTT', 'val'), batch_size=batch_size)
+    eval_loader = _data.get_eval_dataloader(_data.MSRVTTDataset('MSRVTT', 'val'), batch_size=batch_size)
 
     num_train_steps = len(train_loader)
     num_eval_steps = len(eval_loader)
