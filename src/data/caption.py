@@ -13,13 +13,12 @@ from enum import Enum
 from functools import lru_cache
 from typing import Union, List, Iterable
 
-import numpy as np
-
 import nltk
+import numpy as np
 from tqdm import tqdm
 
-import src.utils.utility as _util
 import src.utils.cmd_line as _cmd
+import src.utils.utility as _util
 
 
 class Token(Enum):
@@ -48,11 +47,30 @@ class Vocabulary(metaclass=Singleton):
     PICKLE_FILE = "vocab.pkl"
     """
     Represents an NLP vocabulary. Given all words in a corpus, it will identify all unique words and
-    will return a word's unique index on __getitem__.
+    will return a word's unique index on __getitem__. This is a singleton class.
     """
+    def __new__(cls, dataset: str = None, *args, **kwargs):
+        """
+        Gets a new instance of Vocabulary. If dataset is specified, this will load and return an
+        existing picked Vocabulary. Otherwise, a new vocabulary is created.
+
+        :param dataset: Optional dataset name from which to load an existing pickle.
+        """
+        if dataset is not None:
+            dataset_dir = _util.get_dataset_by_name(dataset)
+
+            with open(os.path.join(dataset_dir, cls.PICKLE_FILE), 'rb') as f:
+                inst = pickle.load(f)
+            if not isinstance(inst, cls):
+                raise TypeError('Pickled object @ {} not of type {}'.format(dataset_dir, cls))
+        else:
+            inst = super(Vocabulary, cls).__new__(cls, *args, **kwargs)
+        return inst
+
+
     def __init__(self, threshold: int = 3):
         """
-        Creates a new Vocabulary with the given threshold.
+        Creates a Vocabulary with the given threshold.
         :param threshold: Number of occurrences under which words will be ignored.
         """
         assert isinstance(threshold, int) and threshold > 0, "Unexpected vocabulary threshold: {}".format(threshold)
@@ -254,3 +272,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
