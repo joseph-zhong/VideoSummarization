@@ -240,7 +240,7 @@ def train(
         for k, v in metrics.items():
             _tb_logger.log_value(k, v, epoch)
             # print('\t%s: %.6f' % (k, v))
-            if k == 'ROUGLE_L' and v > best_rougle_l:
+            if k == 'ROUGE_L' and v > best_rougle_l:
                 # Save the best model based on the METEOR metric.
                 # For reference, see https://www.cs.cmu.edu/~alavie/papers/BanerjeeLavie2005-final.pdf
                 print("Saving best checkpoint of metric: '{}'".format(best_rougle_l))
