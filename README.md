@@ -24,6 +24,10 @@ and re-posing video-captioning as a video-summarization problem.
 
 We can approach video-captioning using encoder-decoder recurrent neural architectures.
 
+We can potentially even use a transformer decoder to post-process the decodings
+
+frames -> low dim (encoder) -> decoder -> word -> bert -> summarization
+
 ## TODO
 
 - [x] Download MSR-VTT dataset with available captions

@@ -12,7 +12,7 @@ from torch.autograd import Function
 from torchvision.models import resnet50
 
 import src.utils.utility as _util
-from src.data.caption import Token
+from src.data.caption import Token, vocab
 
 
 class AppearanceEncoder(nn.Module):
@@ -256,27 +256,27 @@ class Decoder(nn.Module):
     '''
 
     def __init__(self, encoded_size, projected_size, hidden_size,
-                 max_words, vocab):
+                 max_words):
         super(Decoder, self).__init__()
         self.encoded_size = encoded_size
         self.projected_size = projected_size
         self.hidden_size = hidden_size
         self.max_words = max_words
-        self.vocab = vocab
-        self.vocab_size = len(vocab)
 
-        self.word_embed = nn.Embedding(self.vocab_size, projected_size)
+        self.word_embed = nn.Embedding(len(vocab()), projected_size)
         self.word_drop = nn.Dropout(p=0.5)
 
+        # REVIEW josephz: ??? Understand this.
         # The GRU in the paper has three inputs, except the last hidden layer state of the input GRU.
-        # Also need to enter the characteristics of the two dimensions of video features and word features
-        # But the standard GRU only accepts two inputs
-        # Therefore, using two fully connected layers to merge two dimensional features into one dimension outside the GRU
+        # We also need to enter the two dimensions of video features and word features.
+        # However, the standard GRU only accepts two inputs
+        # Therefore, we use two fully connected layers to merge the two dimensional features
+        # into one dimension outside the GRU.
         self.v2m = nn.Linear(encoded_size, projected_size)
         self.w2m = nn.Linear(projected_size, projected_size)
         self.gru_cell = nn.GRUCell(projected_size, hidden_size)
         self.gru_drop = nn.Dropout(p=0.5)
-        self.word_restore = nn.Linear(hidden_size, self.vocab_size)
+        self.word_restore = nn.Linear(hidden_size, len(vocab()))
 
     def _init_gru_state(self, d):
         bsz = d.size(0)
@@ -295,26 +295,39 @@ class Decoder(nn.Module):
 
         """
         batch_size = len(video_encoded)
-        # 根据是否传入caption判断是否是推断模式
+        # During inference time, caption-labels are not available.
         infer = True if captions is None else False
-        # 初始化GRU状态
+        if not infer:
+            # captions[captions >= len(vocab())] = vocab()[Token.UNK]
+            assert captions.max() <= len(vocab())  # REVIEW josephz: Fix this afterwards, with comment on obscure bug
+
+        # Initialize GRU state.
         gru_h = self._init_gru_state(video_encoded)
 
         outputs = []
-        # 先送一个<start>标记
-        word_id = self.vocab[Token.START]
+        # Append START token to to sentence.
+        word_id = vocab()[Token.START]
         word = video_encoded.data.new(batch_size, 1).long().fill_(word_id)
         word = self.word_embed(word).squeeze(1)
         word = self.word_drop(word)
 
         vm = self.v2m(video_encoded)
         for i in range(self.max_words):
-            if not infer and all(x == vocab[Token.PAD] for x in captions[:, i].data):
-                # If all the word ids are Token.PAD, then we have hit the end of the sentence.
-                # <pad>的id是0，如果所有的word id都是0，
-                # 意味着所有的句子都结束了，没有必要再算了
-                break
+            if not infer:
+                allThings = True
+                for x in captions[:, i]:
+                    if x != vocab()[Token.PAD]:
+                        allThings = False
+                if allThings:
+                    break
+
+            # if not infer and all(x == v[Token.PAD] for x in captions[:, i].data):
+            #     If all the word ids are Token.PAD, then we have hit the end of the sentence.
+                # break
+            # Push word to decoder.
             wm = self.w2m(word)
+
+            # Concatenate the video encoding and word encoding.
             m = vm + wm
             gru_h = self.gru_cell(m, gru_h)
             gru_h = self.gru_drop(gru_h)
@@ -323,7 +336,7 @@ class Decoder(nn.Module):
             use_teacher_forcing = not infer and (random.random() < teacher_forcing_ratio)
             if use_teacher_forcing:
                 # teacher forcing模式
-                word_id = captions[:, i]
+                word_id = captions[:, i].clone()
             else:
                 # 非 teacher forcing模式
                 word_id = word_logits.max(1)[1]
@@ -333,12 +346,13 @@ class Decoder(nn.Module):
             else:
                 # 否则是训练模式，要返回logits
                 outputs.append(word_logits)
-            # 确定下一个输入单词的表示
+            # Compute word representation.
             word = self.word_embed(word_id).squeeze(1)
             word = self.word_drop(word)
         # unsqueeze(1)会把一个向量(n)拉成列向量(nx1)
         # outputs中的每一个向量都是整个batch在某个时间步的输出
         # 把它拉成列向量之后再横着拼起来，就能得到整个batch在所有时间步的输出
+        assert len(outputs) > 0
         outputs = torch.cat([o.unsqueeze(1) for o in outputs], 1).contiguous()
         return outputs
 
@@ -348,27 +362,12 @@ class Decoder(nn.Module):
         '''
         return self.forward(video_feats, None, teacher_forcing_ratio=0.0)
 
-    def decode_tokens(self, tokens):
-        '''
-        根据word id（token）列表和给定的字典来得到caption
-        '''
-        words = []
-        for token in tokens:
-            if token == self.vocab[Token.END]:
-                break
-            word = self.vocab.idx2word[token]
-            words.append(word)
-        caption = ' '.join(words)
-        return caption
-
 class BANet(nn.Module):
     def __init__(self, feature_size, projected_size, mid_size, hidden_size,
-                 max_frames, max_words, vocab):
+                 max_frames, max_words):
         super(BANet, self).__init__()
-        self.encoder = Encoder(feature_size, projected_size, mid_size, hidden_size,
-                               max_frames)
-        self.decoder = Decoder(hidden_size, projected_size, hidden_size,
-                               max_words, vocab)
+        self.encoder = Encoder(feature_size, projected_size, mid_size, hidden_size, max_frames)
+        self.decoder = Decoder(hidden_size, projected_size, hidden_size, max_words)
 
     def forward(self, videos, captions, teacher_forcing_ratio=0.5):
         video_encoded = self.encoder(videos)

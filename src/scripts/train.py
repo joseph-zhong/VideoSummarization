@@ -17,6 +17,7 @@ import inspect
 import torch
 import numpy as np
 import tensorboard_logger as _tb_logger
+import tqdm
 
 import src.data.msrvtt as _data
 import src.model.models as _models
@@ -24,7 +25,7 @@ import src.train.train_test_utils as _train
 
 import src.utils.utility as _util
 import src.utils.cmd_line as _cmd
-from src.data.caption import Vocabulary, Token
+from src.data.caption import Vocabulary, Token, vocab
 
 from extern.coco_caption.pycocotools.coco import COCO
 
@@ -130,11 +131,7 @@ def train(
 
     # REVIEW josephz: Make this in msrvtt? load_vocab() using the static PICKLE_FILE?
     # Load Vocabulary.
-    vocab_pkl_path = os.path.join(_util.get_dataset_by_name('MSRVTT'), Vocabulary.PICKLE_FILE)
-    assert os.path.isfile(vocab_pkl_path), "File not found: '{}'".format(vocab_pkl_path)
-    with open(vocab_pkl_path, 'rb') as fin:
-        vocab = pickle.load(fin)
-    vocab_size = len(vocab)
+    vocab_size = len(vocab())
 
     # Load Reference for COCO.
     # REVIEW josephz: The authors
@@ -142,7 +139,7 @@ def train(
     # reference = COCO(reference_json_path)
 
     # Initialize the model.
-    banet = _models.BANet(a_feature_size, projected_size, mid_size, hidden_size, max_frames, max_words, vocab)
+    banet = _models.BANet(a_feature_size, projected_size, mid_size, hidden_size, max_frames, max_words)
 
     # Load model weights if possible.
     # if os.path.exists(best_banet_pth_path) and use_ckpt:
@@ -191,10 +188,12 @@ def train(
         print('epoch:%d\tepsilon:%.8f' % (epoch, epsilon))
         _tb_logger.log_value('epsilon', epsilon, epoch)
 
-        for i, (videos, targets, cap_lens, video_ids) in enumerate(train_loader, start=1):
+        for i, (videos, captions, cap_lens, video_ids) in tqdm.tqdm(enumerate(train_loader, start=1)):
             if use_cuda:
                 videos = videos.cuda()
-                targets = targets.cuda()
+                targets = captions.cuda()
+            else:
+                targets = captions
 
             # Zero the gradients and run the encoder-decoder model.
             optimizer.zero_grad()
@@ -208,28 +207,34 @@ def train(
             # Un-pad and flatten the outputs and labels.
             outputs = torch.cat([outputs[j][:cap_lens[j]] for j in range(bsz)], dim=0)
             targets = torch.cat([targets[j][:cap_lens[j]] for j in range(bsz)], dim=0)
+
             outputs = outputs.view(-1, vocab_size)
             targets = targets.view(-1)
 
             # Compute loss for back-propagation.
+            # assert all(targets > 0) and all(outputs > 0)
             loss = criterion(outputs, targets)
-            # _tb_logger.log_value('loss', loss.data[0], epoch * num_train_steps + i)
-            loss_count += loss.data[0]
+            loss_val = loss.item()
+            _tb_logger.log_value('loss', loss_val, epoch * num_train_steps + i)
+            loss_count += loss_val
+            # REVIEW josephz: Is there grad_norm?
             loss.backward()
             optimizer.step()
 
             # Report Training Progress metrics on loss and perplexity.
-            if i % 10 == 0 or bsz < batch_size:
-                loss_count /= 10 if bsz == batch_size else i % 10
-                print('Epoch [%d/%d], Step [%d/%d], Loss: %.4f, Perplexity: %5.4f' %
-                      (epoch, num_epochs, i, num_train_steps, loss_count, np.exp(loss_count)))
-                loss_count = 0
-                tokens = banet.decoder.sample(video_encoded)
-                tokens = tokens.data[0].squeeze()
-                we = banet.decoder.decode_tokens(tokens)
-                gt = banet.decoder.decode_tokens(targets[0].squeeze())
-                print('[vid:%d]' % video_ids[0])
-                print('WE: %s\nGT: %s' % (we, gt))
+            # if i % 10 == 0 or bsz < batch_size:
+            #     loss_count /= 10 if bsz == batch_size else i % 10
+            #     print('Epoch [%d/%d], Step [%d/%d], Loss: %.4f, Perplexity: %5.4f' %
+            #           (epoch, num_epochs, i, num_train_steps, loss_count, np.exp(loss_count)))
+            #     loss_count = 0
+            #     tokens = banet.decoder.sample(video_encoded)
+            #     tokens = tokens.data[0].squeeze()
+            #
+            #     we = vocab().decode(tokens)
+            #     gt = vocab().decode(captions[0].squeeze())
+            #
+            #     print('\t[vid:{}]'.format(video_ids[0]))
+            #     print('\tWE: {}\nGT: {}'.format(we, gt))
 
         # Finally, compute evaluation metrics and save the best models.
         banet.eval()

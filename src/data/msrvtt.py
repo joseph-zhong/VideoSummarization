@@ -27,7 +27,7 @@ class MSRVTTDataset(_data.Dataset):
         video_id = self._video_ids[index]
         feature = torch.from_numpy(self._features[self._vid2idx[video_id]])
         captions = torch.from_numpy(self._captions[index])
-        return feature, captions, lengths, video_id
+        return feature, captions, self._lengths[index], video_id
 
     def __len__(self):
         return len(self._captions)
