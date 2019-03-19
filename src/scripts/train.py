@@ -98,7 +98,7 @@ def train(
     #   hyperparameters using the cmd_line interface? This should probably be abstracted in utility.py.
     hparams = locals()
     params = {arg_name: hparams[arg_name] for arg_name in inspect.signature(train).parameters.keys()}
-    ckpt_path = _util.get_weights_path_by_param(reuse=True, **params)
+    ckpt_path = _util.get_weights_path_by_param(reuse=False, **params)
     print("Saving checkpoints to '{ckpt_path}', you may visualize in tensorboard with the following: \n\n\t`tensorboard --logdir={ckpt_path}`\n".format(
         ckpt_path=ckpt_path))
 
@@ -136,15 +136,15 @@ def train(
     if os.path.exists(best_banet_pth_path) and use_ckpt:
         weights = torch.load(best_banet_pth_path)
 
-        asdf = banet.encoder.state_dict()
-        encoder_weights = {k.replace('.encoder', ''):v for k, v in weights.items() if k in asdf}
+        # asdf = banet.encoder.state_dict()
+        # encoder_weights = {k.replace('.encoder', ''):v for k, v in weights.items() if k in asdf}
 
         # REVIEW josephz: Figure out how to do the decoder weights partially:
         #   https://discuss.pytorch.org/t/how-to-load-part-of-pre-trained-model/1113/6
-        # del weights['decoder.word_embed.weight']
-        # del weights['decoder.word_restore.bias']
-        # del weights['decoder.word_restore.weight']
-        banet.encoder.load_state_dict(encoder_weights)
+        del weights['decoder.word_embed.weight']
+        del weights['decoder.word_restore.bias']
+        del weights['decoder.word_restore.weight']
+        banet.load_state_dict(weights, strict=False)
     if use_cuda:
         banet.cuda()
 
@@ -172,7 +172,7 @@ def train(
     print("\tDataset: '%s'".format(dataset))
     print("\tCheckpoint Path: '%d'".format(ckpt_path))
 
-    best_meteor = 0
+    best_rougle_l = 0
     loss_count = 0
     for epoch in range(num_epochs):
         epsilon = max(min_ss, ss_factor / (ss_factor + np.exp(epoch / ss_factor)))
@@ -217,7 +217,7 @@ def train(
                 loss_count /= eval_steps if bsz == batch_size else i % eval_steps
                 print('Epoch [%d/%d], Step [%d/%d], Loss: %.4f, Perplexity: %5.4f' %
                       (epoch, num_epochs, i, num_train_steps, loss_count,
-                       np.exp(loss_count)))
+                      np.exp(loss_count)))
                 loss_count = 0
                 tokens = banet.decoder.sample(video_encoded)
                 tokens = tokens.data[0].squeeze()
@@ -226,6 +226,13 @@ def train(
                 print('[vid:{}]'.format(video_ids[0]))
                 print('WE: %s\nGT: %s' % (we, gt))
 
+        # Save epoch checkpoint.
+        banet_pth_path = banet_pth_path_fmt.format(epoch, num_epochs)
+        print("Saving checkpoints to '{}'".format(banet_pth_path))
+
+        torch.save(banet.state_dict(), banet_pth_path)
+        torch.save(optimizer.state_dict(), optimizer_pth_path)
+
         # Finally, compute evaluation metrics and save the best models.
         banet.eval()
         print("Computing Metrics:...")
@@ -233,12 +240,13 @@ def train(
         for k, v in metrics.items():
             _tb_logger.log_value(k, v, epoch)
             # print('\t%s: %.6f' % (k, v))
-            if k == 'ROUGLE_L' and v > best_meteor:
+            if k == 'ROUGLE_L' and v > best_rougle_l:
                 # Save the best model based on the METEOR metric.
                 # For reference, see https://www.cs.cmu.edu/~alavie/papers/BanerjeeLavie2005-final.pdf
-                shutil.copy2(banet_pth_path_fmt, best_banet_pth_path)
+                print("Saving best checkpoint of metric: '{}'".format(best_rougle_l))
+                shutil.copy2(banet_pth_path, best_banet_pth_path)
                 shutil.copy2(optimizer_pth_path, best_optimizer_pth_path)
-                best_meteor = v
+                best_rougle_l = v
         banet.train()
 
 def main():
