@@ -54,5 +54,4 @@ class CocoResFormat:
 
     def dump_json(self, outfile):
         with open(outfile, 'w') as fd:
-            json.dump(self.res, fd, ensure_ascii=False, sort_keys=True,
-                      indent=2, separators=(',', ': '))
+            json.dump(self.res, fd, ensure_ascii=False, sort_keys=True, indent=2, separators=(',', ': '))
