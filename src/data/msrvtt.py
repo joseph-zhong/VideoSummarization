@@ -14,11 +14,11 @@ class MSRVTTDataset(_data.Dataset):
     def __init__(self, dataset: str, mode: str) -> None:
         super().__init__()
 
-        dataset_dir = _util.getDatasetByName(dataset, mode)
-        self._features = _util.loadArray(dataset_dir, "frames")
-        self._captions = _util.loadArray(dataset_dir, "captions")
-        self._lengths = _util.loadArray(dataset_dir, "cap_lens")
-        self._video_ids = _util.loadArray(dataset_dir, "video_ids")
+        dataset_dir = _util.get_dataset_by_name(dataset, mode)
+        self._features = _util.load_array(dataset_dir, "frames")
+        self._captions = _util.load_array(dataset_dir, "captions")
+        self._lengths = _util.load_array(dataset_dir, "cap_lens")
+        self._video_ids = _util.load_array(dataset_dir, "video_ids")
         self._vid2idx = {video_id: idx for idx, video_id in enumerate(sorted(set(self._video_ids)))}
 
     def __getitem__(self, index):
@@ -34,9 +34,9 @@ class VideoDataset(_data.Dataset):
     def __init__(self, dataset: str, mode: str) -> None:
         super().__init__()
 
-        dataset_dir = _util.getDatasetByName(dataset, mode)
-        self._features = _util.loadArray(dataset_dir, "frames")
-        self._video_ids = _util.loadArray(dataset_dir,  "video_ids")
+        dataset_dir = _util.get_dataset_by_name(dataset, mode)
+        self._features = _util.load_array(dataset_dir, "frames")
+        self._video_ids = _util.load_array(dataset_dir, "video_ids")
         self._vid2idx = {video_id: idx for idx, video_id in enumerate(sorted(set(self._video_ids)))}
 
     def __getitem__(self, index):

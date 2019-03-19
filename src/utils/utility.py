@@ -18,7 +18,7 @@ import numpy as np
 DEFAULT_VERBOSITY = 4
 
 
-def getLogger(name, level=logging.DEBUG, verbosity=DEFAULT_VERBOSITY):
+def get_logger(name, level=logging.DEBUG, verbosity=DEFAULT_VERBOSITY):
     level = max(level, logging.CRITICAL - 10 * verbosity)
 
     logger = logging.getLogger(name)
@@ -26,7 +26,7 @@ def getLogger(name, level=logging.DEBUG, verbosity=DEFAULT_VERBOSITY):
     return logger
 
 
-_logger = getLogger(__file__)
+_logger = get_logger(__file__)
 _LOGGING_FORMAT = "[%(asctime)s %(levelname)5s %(filename)s %(funcName)s:%(lineno)s] %(message)s"
 logging.basicConfig(format=_LOGGING_FORMAT, datefmt="%Y-%m-%d %H:%M:%S")
 
@@ -47,7 +47,7 @@ def touch(path: str) -> None:
         raise IsADirectoryError("Cannot touch file '{}', directory exists at this location".format(path))
 
 
-def dumpArray(directory: str, name: str, batch: int, arr: np.ndarray, overwrite=False) -> None:
+def dump_array(directory: str, name: str, batch: int, arr: np.ndarray, overwrite=False) -> None:
     assert isinstance(directory, str) and os.path.isdir(directory), "Could not find directory: {}".format(directory)
 
     path = os.path.join(directory, name)
@@ -75,7 +75,7 @@ def dumpArray(directory: str, name: str, batch: int, arr: np.ndarray, overwrite=
 
 
 @lru_cache(maxsize=8)
-def loadArray(directory: str, name: str) -> np.ndarray:
+def load_array(directory: str, name: str) -> np.ndarray:
     assert isinstance(directory, str) and os.path.isdir(directory), "Could not find directory: {}".format(directory)
 
     path = os.path.join(directory, name)
@@ -93,12 +93,12 @@ def loadArray(directory: str, name: str) -> np.ndarray:
     return np.concatenate(batches, axis=0)
 
 
-def getRawDatasetByName(name: str, mode: str = None) -> str:
+def get_raw_dataset_by_name(name: str, mode: str = None) -> str:
     assert isinstance(name, str) and len(name), "Expected dataset name as string got {}".format(name)
     assert mode is None or isinstance(mode, str) and mode == "train" or mode == "test" or mode == "val", \
         "mode must be train, val, or test got {}".format(mode)
 
-    datasets = os.path.join(getWorkspace(), "data", "raw")
+    datasets = os.path.join(get_workspace(), "data", "raw")
     dataset = os.path.join(datasets, name)
     if mode:
         dataset = os.path.join(dataset, mode)
@@ -112,11 +112,11 @@ def getRawDatasetByName(name: str, mode: str = None) -> str:
     return dataset
 
 
-def getDatasetByName(name: str, mode: str = None, create=False) -> str:
+def get_dataset_by_name(name: str, mode: str = None, create=False) -> str:
     assert isinstance(name, str) and len(name), "Expected dataset name as string got {}".format(name)
     assert mode is None or isinstance(mode, str) and mode == "train" or mode == "test" or mode == "val", \
         "mode must be train, val, or test got {}".format(mode)
-    datasets = os.path.join(getWorkspace(), "data", "datasets")
+    datasets = os.path.join(get_workspace(), "data", "datasets")
     dataset = os.path.join(datasets, name)
     if mode:
         dataset = os.path.join(dataset, mode)
@@ -133,7 +133,7 @@ def getDatasetByName(name: str, mode: str = None, create=False) -> str:
     return dataset
 
 
-def getWeightsByParams(reuse=False, overwrite=False, **params: Any) -> str:
+def get_weights_path_by_param(reuse=False, overwrite=False, **params: Any) -> str:
     """
     Get the weights directory for a model given it's parameters.
 
@@ -155,7 +155,7 @@ def getWeightsByParams(reuse=False, overwrite=False, **params: Any) -> str:
     dirs = ("{}={}".format(key.lower(), value) for key, value in zip(keys, values))
 
     # Build path and ensure exists.
-    path = os.path.join(getWorkspace(), "data", "weights", params["dataset"].lower(), *dirs)
+    path = os.path.join(get_workspace(), "data", "weights", params["dataset"].lower(), *dirs)
     mkdir(path)
 
     # If overwrite is not specified, return the most recent weights folder otherwise create a new one.
@@ -176,6 +176,6 @@ def getWeightsByParams(reuse=False, overwrite=False, **params: Any) -> str:
 
 
 @lru_cache(maxsize=1)
-def getWorkspace() -> str:
+def get_workspace() -> str:
     assert 'VS_WORKSPACE' in os.environ, "ENV variable 'VS_WORKSPACE' must be set to the repository root"
     return os.environ['VS_WORKSPACE']

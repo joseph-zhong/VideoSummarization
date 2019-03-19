@@ -28,7 +28,7 @@ from src.data.caption import Vocabulary, Token
 
 from extern.coco_caption.pycocotools.coco import COCO
 
-_logger = _util.getLogger(__file__)
+_logger = _util.get_logger(__file__)
 
 tmp_dir = 'tmp'
 val_reference_txt_path = os.path.join(tmp_dir, 'msr-vtt_val_references.txt')
@@ -105,7 +105,7 @@ def train(
     #   hyperparameters using the cmd_line interface? This should probably be abstracted in utility.py.
     hparams = locals()
     params = {arg_name: hparams[arg_name] for arg_name in inspect.signature(train).parameters.keys()}
-    ckpt_path = _util.getWeightsByParams(reuse=True, **params)
+    ckpt_path = _util.get_weights_path_by_param(reuse=True, **params)
     print("Saving checkpoints to '{ckpt_path}', you may visualize in tensorboard with the following: \n\n\t`tensorboard --logdir={ckpt_path}`\n".format(
         ckpt_path=ckpt_path))
 

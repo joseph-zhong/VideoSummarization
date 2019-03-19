@@ -125,7 +125,7 @@ def build_vocabulary(captions, threshold):
 
 def _build_cache(dataset: str, mode: str, sentences: List[str], video_ids: List[str], vocab: Vocabulary, max_words: int,
                  overwrite: bool) -> None:
-    dataset_dir = _util.getDatasetByName(dataset, mode, create=True)
+    dataset_dir = _util.get_dataset_by_name(dataset, mode, create=True)
 
     captions = []
     cap_lens = []
@@ -151,9 +151,9 @@ def _build_cache(dataset: str, mode: str, sentences: List[str], video_ids: List[
     video_ids = np.array(video_ids)
 
     _logger.info("Saving cache...")
-    _util.dumpArray(dataset_dir, "captions", 10000, captions, overwrite=overwrite)
-    _util.dumpArray(dataset_dir, "cap_lens", 100000, cap_lens, overwrite=overwrite)
-    _util.dumpArray(dataset_dir, "video_ids", 100000, video_ids, overwrite=overwrite)
+    _util.dump_array(dataset_dir, "captions", 10000, captions, overwrite=overwrite)
+    _util.dump_array(dataset_dir, "cap_lens", 100000, cap_lens, overwrite=overwrite)
+    _util.dump_array(dataset_dir, "video_ids", 100000, video_ids, overwrite=overwrite)
 
 
 def build_cache(raw: str, dataset: str, threshold: int, max_words: int, train_fraction: float = 1., overwrite: bool = False) -> None:
@@ -172,9 +172,9 @@ def build_cache(raw: str, dataset: str, threshold: int, max_words: int, train_fr
     assert isinstance(train_fraction, float) and 0 < train_fraction <= 1.
     assert isinstance(max_words, int) and max_words > 0, "max_words must be a positive integer"
 
-    train_dir = _util.getRawDatasetByName(raw, mode="train")
-    val_dir = _util.getRawDatasetByName(raw, mode="val")
-    test_dir = _util.getRawDatasetByName(raw, mode="test")
+    train_dir = _util.get_raw_dataset_by_name(raw, mode="train")
+    val_dir = _util.get_raw_dataset_by_name(raw, mode="val")
+    test_dir = _util.get_raw_dataset_by_name(raw, mode="test")
 
     train_ann = os.path.join(train_dir, "annotations.json")
     val_ann = os.path.join(val_dir, "annotations.json")
@@ -218,7 +218,7 @@ def build_cache(raw: str, dataset: str, threshold: int, max_words: int, train_fr
     _build_cache(dataset, "val", val_sentences, val_video_ids, vocab, max_words, overwrite)
     _build_cache(dataset, "test", test_sentences, test_video_ids, vocab, max_words, overwrite)
 
-    with open(os.path.join(_util.getDatasetByName(dataset), Vocabulary.PICKLE_FILE), 'wb') as f:
+    with open(os.path.join(_util.get_dataset_by_name(dataset), Vocabulary.PICKLE_FILE), 'wb') as f:
         pickle.dump(vocab, f)
 
 
@@ -227,7 +227,7 @@ def main():
     args = _cmd.parseArgsForClassOrScript(build_cache)
     varsArgs = vars(args)
     verbosity = varsArgs.pop('verbosity', _util.DEFAULT_VERBOSITY)
-    _logger = _util.getLogger(__file__, verbosity=verbosity)
+    _logger = _util.get_logger(__file__, verbosity=verbosity)
     _logger.info("Passed arguments: '{}'".format(varsArgs))
     build_cache(**varsArgs)
 
