@@ -34,7 +34,7 @@ class Token(Enum):
         return self.value
 
 
-def vocab(dataset=None):
+def vocab(dataset="MSRVTT"):
     if vocab.inst is None:
         if dataset is None:
             vocab.inst = Vocabulary()
