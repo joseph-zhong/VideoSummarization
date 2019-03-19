@@ -24,7 +24,7 @@ import src.train.train_test_utils as _train
 
 import src.utils.utility as _util
 import src.utils.cmd_line as _cmd
-from extern.banet.caption import Vocabulary
+from src.data.caption import Vocabulary, Token
 
 from extern.coco_caption.pycocotools.coco import COCO
 
@@ -90,6 +90,11 @@ def train(
         use_cuda (bool): Flag whether to use CUDA devices.
         use_ckpt (bool): Flag on whether to load checkpoint if possible.
         seed (int): Random seed.
+
+    Effects:
+        We will have several outputs:
+            - Checkpoints (model weights)
+            - Logs (tensorboard logs)
     """
     # Set seeds.
     torch.random.manual_seed(seed)
@@ -104,10 +109,16 @@ def train(
     print("Saving checkpoints to '{ckpt_path}', you may visualize in tensorboard with the following: \n\n\t`tensorboard --logdir={ckpt_path}`\n".format(
         ckpt_path=ckpt_path))
 
+    # Setup logging paths.
+    log_path = os.path.join(ckpt_path, 'logs')
+    _util.mkdir(log_path)
+    _tb_logger.configure(log_path, flush_secs=10)
+
+    # REVIEW josephz: Todo, clean this up.
     banet_pth_path_fmt = os.path.join(ckpt_path, '{:04d}_{:04d}.pth')
     best_banet_pth_path = os.path.join(ckpt_path, 'weights.pth')
-    optimizer_pth_path = os.path.join(ckpt_path, 'msr-vtt_optimizer.pth')
-    best_optimizer_pth_path = os.path.join(ckpt_path, 'msr-vtt_best_optimizer.pth')
+    optimizer_pth_path = os.path.join(ckpt_path, 'optimizer.pth')
+    best_optimizer_pth_path = os.path.join(ckpt_path, 'best_optimizer.pth')
 
     # Prepare dataset paths.
     # video_root = './datasets/MSR-VTT/Video/'
@@ -120,8 +131,6 @@ def train(
     # Load Vocabulary.
     vocab_pkl_path = os.path.join(_util.getDatasetByName('MSRVTT', mode=None), 'vocab.pkl')
     assert os.path.isfile(vocab_pkl_path), "File not found: '{}'".format(vocab_pkl_path)
-
-    # Load vocabulary for the particular dataset.
     with open(vocab_pkl_path, 'rb') as fin:
         vocab = pickle.load(fin)
     vocab_size = len(vocab)
@@ -157,8 +166,8 @@ def train(
         optimizer.load_state_dict(torch.load(optimizer_pth_path))
 
     # Initialize Dataloaders.
-    train_loader = _data.get_train_dataloader(_data.MSRVTTDataset('MSRVTT', 'train'), batch_size=batch_size)
-    eval_loader = _data.get_eval_dataloader(_data.MSRVTTDataset('MSRVTT', 'val'), batch_size=batch_size)
+    train_loader = _data.get_train_dataloader('MSRVTT', batch_size=batch_size)
+    eval_loader = _data.get_eval_dataloader('MSRVTT', 'val', batch_size=batch_size)
 
     num_train_steps = len(train_loader)
     num_eval_steps = len(eval_loader)
