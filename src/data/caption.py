@@ -34,58 +34,43 @@ class Token(Enum):
         return self.value
 
 
-class Singleton(type):
-    _instances = {}
+def vocab(dataset=None):
+    if vocab.inst is None:
+        if dataset is None:
+            vocab.inst = Vocabulary()
+        else:
+            dataset_dir = _util.get_dataset_by_name(dataset)
+            with open(os.path.join(dataset_dir, Vocabulary.PICKLE_FILE), 'rb') as f:
+                vocab.inst = pickle.load(f)
+            if not isinstance(vocab.inst, Vocabulary):
+                raise TypeError('Pickled object @ {} not of type {}'.format(dataset_dir, Vocabulary))
+    return vocab.inst
+vocab.inst = None
 
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
 
-
-class Vocabulary(metaclass=Singleton):
+class Vocabulary:
     PICKLE_FILE = "vocab.pkl"
     """
     Represents an NLP vocabulary. Given all words in a corpus, it will identify all unique words and
     will return a word's unique index on __getitem__. This is a singleton class.
     """
-    def __new__(cls, dataset: str = None, *args, **kwargs):
-        """
-        Gets a new instance of Vocabulary. If dataset is specified, this will load and return an
-        existing picked Vocabulary. Otherwise, a new vocabulary is created.
-
-        :param dataset: Optional dataset name from which to load an existing pickle.
-        """
-        if dataset is not None:
-            dataset_dir = _util.get_dataset_by_name(dataset)
-
-            with open(os.path.join(dataset_dir, cls.PICKLE_FILE), 'rb') as f:
-                inst = pickle.load(f)
-            if not isinstance(inst, cls):
-                raise TypeError('Pickled object @ {} not of type {}'.format(dataset_dir, cls))
-        else:
-            inst = super(Vocabulary, cls).__new__(cls, *args, **kwargs)
-        return inst
-
-    # Due to the C implementation of object's __call__, this argument must exist though it is unused.
-    def __init__(self, threshold: int = 3, dataset = None):
+    def __init__(self, threshold: int = 3):
         """
         Creates a Vocabulary with the given threshold.
         :param threshold: Number of occurrences under which words will be ignored.
         """
-        if not hasattr(self, "_nwords"):
-            assert isinstance(threshold, int) and threshold > 0, "Unexpected vocabulary threshold: {}".format(threshold)
+        assert isinstance(threshold, int) and threshold > 0, "Unexpected vocabulary threshold: {}".format(threshold)
 
-            self._threshold = threshold
-            self._word2idx = {}
-            self._word2count = {}
-            self._idx2word = []
-            self._nwords = 0
+        self._threshold = threshold
+        self._word2idx = {}
+        self._word2count = {}
+        self._idx2word = []
+        self._nwords = 0
 
-            self.add(Token.PAD, threshold)
-            self.add(Token.START, threshold)
-            self.add(Token.END, threshold)
-            self.add(Token.UNK, threshold)
+        self.add(Token.PAD, threshold)
+        self.add(Token.START, threshold)
+        self.add(Token.END, threshold)
+        self.add(Token.UNK, threshold)
 
     def add(self, word: Union[str, Token], inc: int = 1) -> None:
         """
