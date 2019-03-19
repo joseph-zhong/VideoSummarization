@@ -75,7 +75,7 @@ def parseArgsForClassOrScript(fn):
     argv = parser.parse_args()
     argsToVals = vars(argv)
 
-    if argv.verbosity > 0 or argv.help:
+    if argv.verbosity >= 0 or hasattr(argv, 'help'):
         docstr = inspect.getdoc(fn)
         assert docstr is not None, "Please write documentation :)"
         print()
