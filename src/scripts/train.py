@@ -170,10 +170,10 @@ def train(
     print("\tScheduled Sampling:")
     print("\t\tMax Teacher Forcing Rate: '{0:.4f}'".format(min_ss))
     print("\t\tScheduled Factor: '{0:.4f}'".format(ss_factor))
-    print("\tBatch Size: '%d'".format(batch_size))
-    print("\tEpochs: '%d'".format(num_epochs))
-    print("\tDataset: '%s'".format(dataset))
-    print("\tCheckpoint Path: '%d'".format(ckpt_path))
+    print("\tBatch Size: '{}'".format(batch_size))
+    print("\tEpochs: '{}'".format(num_epochs))
+    print("\tDataset: '{}'".format(dataset))
+    print("\tCheckpoint Path: '{}'".format(ckpt_path))
 
     best_rougle_l = 0
     loss_count = 0
