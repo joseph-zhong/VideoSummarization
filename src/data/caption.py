@@ -21,6 +21,8 @@ import src.utils.cmd_line as _cmd
 import src.utils.utility as _util
 import src.utils.coco as _coco
 
+_logger = _util.get_logger(__file__)
+
 
 class Token(Enum):
     """

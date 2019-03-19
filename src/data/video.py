@@ -20,6 +20,8 @@ import src.utils.cmd_line as _cmd
 import src.utils.utility as _util
 from src.model.models import MotionEncoder, AppearanceEncoder
 
+_logger = _util.get_logger(__file__)
+
 
 def sample_frames(video_path, frequency):
     assert os.path.isfile(video_path), "Could not find video at path: {}".format(video_path)
