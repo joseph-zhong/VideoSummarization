@@ -36,7 +36,6 @@ def train(
     dataset: str,
     num_epochs: int=100,
     batch_size: int=128,
-    pretrained_run: int=-1,
 
     # Learning rate schedulers.
     learning_rate: float=3e-4,
@@ -59,6 +58,8 @@ def train(
     max_frames: int=30,  # Maximum length of the video-frame sequence.
     max_words: int=30,  # Maximum length of the caption-word sequence.
 
+    # Misc hyperparameters.
+    ckpt_freq: int=3,
     use_cuda: bool=False,
     use_ckpt: bool=False,
     seed: int=0,
@@ -69,8 +70,6 @@ def train(
         dataset (str): Dataset to train on.
         num_epochs (int): Number of epochs to train for.
         batch_size (int): Batch size to train with.
-        pretrained_run (int): Int representing the run to load pre-trained weights from.
-            Set to -1 by default to disable loading pre-trained weights.
 
         learning_rate (float): Learning rate.
         ss_factor (int): Scheduled Sampling factor, to compute a teacher-forcing ratio.
@@ -84,6 +83,7 @@ def train(
         max_frames (int): Maximum length of the video-frame sequence.
         max_words (int): Maximum length of the caption-word sequence.
 
+        ckpt_freq (int): Frequency to compute evaluation metrics and save checkpoint.
         use_cuda (bool): Flag whether to use CUDA devices.
         use_ckpt (bool): Flag on whether to load checkpoint if possible.
         seed (int): Random seed.
@@ -230,28 +230,28 @@ def train(
                     print('\t\t[vid_id={}]'.format(video_ids[j]))
                     print('\t\t\tWE: %s\n\t\t\tGT: %s' % (we, gt))
 
-        # Save epoch checkpoint.
-        banet_pth_path = banet_pth_path_fmt.format(epoch, num_epochs)
-        print("Saving checkpoints to '{}'".format(banet_pth_path))
-
-        torch.save(banet.state_dict(), banet_pth_path)
-        torch.save(optimizer.state_dict(), optimizer_pth_path)
-
         # Finally, compute evaluation metrics and save the best models.
-        banet.eval()
-        print("Computing Metrics:...")
-        metrics = _train.eval_step(eval_loader, banet, test_prediction_txt_path, reference, use_cuda=use_cuda)
-        for k, v in metrics.items():
-            _tb_logger.log_value(k, v, epoch)
-            # print('\t%s: %.6f' % (k, v))
-            if k == 'METEOR' and v > best_meteor:
-                # Save the best model based on the METEOR metric.
-                # For reference, see https://www.cs.cmu.edu/~alavie/papers/BanerjeeLavie2005-final.pdf
-                print("Saving best checkpoint of metric: '{}'".format(best_meteor))
-                shutil.copy2(banet_pth_path, best_banet_pth_path)
-                shutil.copy2(optimizer_pth_path, best_optimizer_pth_path)
-                best_meteor = v
-        banet.train()
+        if epoch % ckpt_freq == 0:
+            # Save epoch checkpoint.
+            banet_pth_path = banet_pth_path_fmt.format(epoch, num_epochs)
+            print("Saving checkpoints to '{}'".format(banet_pth_path))
+            torch.save(banet.state_dict(), banet_pth_path)
+            torch.save(optimizer.state_dict(), optimizer_pth_path)
+
+            # Compute evaluation.
+            banet.eval()
+            print("Computing Metrics:...")
+            metrics = _train.eval_step(eval_loader, banet, test_prediction_txt_path, reference, use_cuda=use_cuda)
+            for k, v in metrics.items():
+                _tb_logger.log_value(k, v, epoch)
+                if k == 'METEOR' and v > best_meteor:
+                    # Save the best model based on the METEOR metric.
+                    # For reference, see https://www.cs.cmu.edu/~alavie/papers/BanerjeeLavie2005-final.pdf
+                    print("Saving best checkpoint of metric: '{}'".format(best_meteor))
+                    shutil.copy2(banet_pth_path, best_banet_pth_path)
+                    shutil.copy2(optimizer_pth_path, best_optimizer_pth_path)
+                    best_meteor = v
+            banet.train()
 
 def main():
     global _logger
