@@ -219,7 +219,7 @@ def train(
             if i % eval_steps == 0 or bsz < batch_size:
                 loss_count /= eval_steps if bsz == batch_size else i % eval_steps
                 perplexity = np.exp(loss_count)
-                print('Epoch [%d/%d], Step [%d/%d], Loss: %.4f, Perplexity: %5.4f' %
+                print('Epoch [%d/%d]:\n\tStep [%d/%d]\n\tLoss: %.4f\n\tPerplexity: %5.4f' %
                       (epoch, num_epochs, i, num_train_steps, loss_count, perplexity))
                 _tb_logger.log_value('perplexity', perplexity, epoch * num_train_steps + i)
                 loss_count = 0
@@ -227,8 +227,8 @@ def train(
                 for j in range(5):
                     we = vocab().decode(tokens.data[j].squeeze())
                     gt = vocab().decode(captions[j].squeeze())
-                    print('[vid:{}]'.format(video_ids[j]))
-                    print('WE: %s\nGT: %s' % (we, gt))
+                    print('\t\t[vid_id={}]'.format(video_ids[j]))
+                    print('\t\t\tWE: %s\n\t\t\tGT: %s' % (we, gt))
 
         # Save epoch checkpoint.
         banet_pth_path = banet_pth_path_fmt.format(epoch, num_epochs)
