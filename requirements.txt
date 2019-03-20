@@ -10,5 +10,6 @@ tensorboard_logger
 opencv-python
 gensim
 imageio
+imageio-ffmpeg
 tqdm
 
