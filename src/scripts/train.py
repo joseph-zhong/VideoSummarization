@@ -175,7 +175,7 @@ def train(
     print("\tDataset: '{}'".format(dataset))
     print("\tCheckpoint Path: '{}'".format(ckpt_path))
 
-    best_rougle_l = 0
+    best_meteor = 0
     loss_count = 0
     for epoch in range(num_epochs):
         epsilon = max(min_ss, ss_factor / (ss_factor + np.exp(epoch / ss_factor)))
@@ -244,13 +244,13 @@ def train(
         for k, v in metrics.items():
             _tb_logger.log_value(k, v, epoch)
             # print('\t%s: %.6f' % (k, v))
-            if k == 'ROUGE_L' and v > best_rougle_l:
+            if k == 'METEOR' and v > best_meteor:
                 # Save the best model based on the METEOR metric.
                 # For reference, see https://www.cs.cmu.edu/~alavie/papers/BanerjeeLavie2005-final.pdf
-                print("Saving best checkpoint of metric: '{}'".format(best_rougle_l))
+                print("Saving best checkpoint of metric: '{}'".format(best_meteor))
                 shutil.copy2(banet_pth_path, best_banet_pth_path)
                 shutil.copy2(optimizer_pth_path, best_optimizer_pth_path)
-                best_rougle_l = v
+                best_meteor = v
         banet.train()
 
 def main():
