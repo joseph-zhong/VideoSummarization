@@ -225,9 +225,9 @@ def train(
                 loss_count = 0
                 tokens = banet.decoder.sample(video_encoded)
                 for j in range(5):
-                    we = vocab().decode(tokens.data[i].squeeze())
-                    gt = vocab().decode(captions[i].squeeze())
-                    print('[vid:{}]'.format(video_ids[i]))
+                    we = vocab().decode(tokens.data[j].squeeze())
+                    gt = vocab().decode(captions[j].squeeze())
+                    print('[vid:{}]'.format(video_ids[j]))
                     print('WE: %s\nGT: %s' % (we, gt))
 
         # Save epoch checkpoint.
