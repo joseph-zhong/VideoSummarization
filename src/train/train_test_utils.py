@@ -41,12 +41,16 @@ def eval_step(eval_loader, banet, prediction_txt_path, reference, use_cuda=False
 
 
 def measure(prediction_txt_path, reference):
+    prediction_json_path = prediction_txt_path.replace(".txt", ".json")
+
     # 把txt格式的预测结果转换成检验程序所要求的格式
     crf = _coco.CocoResFormat()
     crf.read_file(prediction_txt_path, True)
+    crf.dump_json(prediction_json_path)
 
     # 把txt格式的预测结果转换成检验程序所要求的格式
-    cocoRes = reference.loadRes(crf.res)
+    # cocoRes = reference.loadRes(crf.res)
+    cocoRes = reference.loadRes(prediction_json_path)
     cocoEval = COCOEvalCap(reference, cocoRes)
 
     cocoEval.evaluate()
