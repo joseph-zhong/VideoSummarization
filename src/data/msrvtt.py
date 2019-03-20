@@ -78,7 +78,11 @@ def eval_collate_fn(data):
 
 
 def get_train_dataloader(dataset: str, batch_size=10, shuffle=True, num_workers=3, pin_memory=True) -> _data.dataloader:
-    vtt = MSRVTTDataset(dataset, "train")
+    return get_dataloader(dataset, "train", batch_size, shuffle, num_workers, pin_memory)
+
+
+def get_dataloader(dataset: str, mode: str, batch_size=10, shuffle=True, num_workers=3, pin_memory=True) -> _data.dataloader:
+    vtt = MSRVTTDataset(dataset, mode)
     return torch.utils.data.DataLoader(dataset=vtt,
                                        batch_size=batch_size,
                                        shuffle=shuffle,

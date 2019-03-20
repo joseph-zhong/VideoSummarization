@@ -11,7 +11,7 @@ import logging
 
 from functools import lru_cache
 
-from typing import Any
+from typing import Any, Dict, Tuple
 
 import numpy as np
 
@@ -131,6 +131,38 @@ def get_dataset_by_name(name: str, mode: str = None, create=False) -> str:
         raise FileExistsError("File exists at expected dataset location: {}".format(dataset))
 
     return dataset
+
+
+def get_params_by_weights_path(weights_path: str) -> Tuple[str, int, Dict[str, str], str]:
+    assert isinstance(weights_path, str)
+
+    weights_dir = os.path.join(get_workspace(), "data", "weights")
+    if os.path.isabs(weights_path):
+        assert os.path.exists(weights_path), "Weights directory does not exist: {}".format(weights_path)
+
+        assert weights_path.startswith(weights_dir), \
+            "weights_path must start with weights_dir '{}'".format(weights_dir)
+        weights_path = weights_path[len(weights_dir):]
+
+    dirs = weights_path.split(os.sep)
+
+    # First will be dataset.
+    model = dirs[0]
+    assert "=" not in model, "Expected first dir to be dataset, but was arg"
+    assert os.path.exists(os.path.join(weights_dir, model))
+
+    # Last arg will be run number.
+    run = int(dirs[-1])
+
+    dirs = dirs[1:-1]
+    args = {}
+    for dir_ in dirs:
+        assert "=" in dir_, "Could not parse argument from '{}'".format(dir_)
+        idx = dir_.index("=")
+
+        args[dir_[:idx]] = dir_[idx+1:]
+
+    return model, run, args, os.path.join(weights_dir, weights_path)
 
 
 def get_weights_path_by_param(reuse=False, overwrite=False, **params: Any) -> str:

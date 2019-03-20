@@ -12,4 +12,5 @@ gensim
 imageio
 imageio-ffmpeg
 tqdm
-
+matplotlib
+seaborn
