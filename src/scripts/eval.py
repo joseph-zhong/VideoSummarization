@@ -69,8 +69,8 @@ def evaluate(raw: str, dataset: str, mode: str, weights_path: str, batch_size: i
             # vid = imageio.get_reader(vid_paths[j]).iter_data()
 
             print('[vid_id={}]'.format(video_ids[j]))
-            print("pred:", vocab().decode(captions[j]))
-            print("gt  :", vocab().decode(tokens.data[j].squeeze()))
+            print("gt  :", vocab().decode(captions[j]))
+            print("pred:", vocab().decode(tokens.data[j].squeeze()))
             print()
 
             # First few frames are black sometimes
