@@ -56,7 +56,7 @@ def train(
 
     # Maximum-size hyperparameters.
     # frame_sample_rate: int=10,  # Sample rate of video frames.
-    max_frames: int=100,  # Maximum length of the video-frame sequence.
+    max_frames: int=30,  # Maximum length of the video-frame sequence.
     max_words: int=30,  # Maximum length of the caption-word sequence.
 
     use_cuda: bool=False,
