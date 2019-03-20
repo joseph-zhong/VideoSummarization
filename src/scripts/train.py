@@ -218,9 +218,10 @@ def train(
             eval_steps = 25
             if i % eval_steps == 0 or bsz < batch_size:
                 loss_count /= eval_steps if bsz == batch_size else i % eval_steps
+                perplexity = np.exp(loss_count)
                 print('Epoch [%d/%d], Step [%d/%d], Loss: %.4f, Perplexity: %5.4f' %
-                      (epoch, num_epochs, i, num_train_steps, loss_count,
-                      np.exp(loss_count)))
+                      (epoch, num_epochs, i, num_train_steps, loss_count, perplexity))
+                _tb_logger.log_value('perplexity', perplexity, epoch * num_train_steps + i)
                 loss_count = 0
                 tokens = banet.decoder.sample(video_encoded)
                 tokens = tokens.data[0].squeeze()
