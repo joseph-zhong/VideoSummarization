@@ -47,6 +47,7 @@ class AppearanceEncoder(nn.Module):
     def feature_size():
         return 2048
 
+
 class C3D(nn.Module):
     """
     C3D model (https://github.com/DavideA/c3d-pytorch/blob/master/C3D_model.py)
@@ -126,13 +127,15 @@ class MotionEncoder(nn.Module):
 
 # REVIEW josephz: There is some random-ness introduced that is not seeded.
 class BinaryGate(Function):
-    '''
-    二值门单元
-    forward中的二值门单元分为train和eval两种：
-    train: 阈值为[0,1]内均匀分布的随机采样值随机的二值神经元，
-    eval: 固定阈值为0.5的二值神经元
-    backward中的二值门单元的导函数用identity函数
-    '''
+    """
+    Binary gate unit
+     The binary gate unit in forward is divided into two types: train and eval
+         Train: a binary valued neuron with a random sample value randomly distributed within [0,1],
+         Eval: binary neuron with a fixed threshold of 0.5
+     The derivative function of the binary gate unit in backwards uses the identity function
+
+    This is computing tau(x)
+    """
 
     @staticmethod
     def forward(ctx, input, training=False, inplace=False):
@@ -149,12 +152,21 @@ class BinaryGate(Function):
     def backward(ctx, grad_output):
         return grad_output, None, None
 
+
 class BoundaryDetector(nn.Module):
     '''
     Boundary Detector，边界检测模块
     '''
 
     def __init__(self, i_features, h_features, s_features, inplace=False):
+        """
+
+        Args:
+            i_features: Current input size.
+            h_features: Previous hidden state size.
+            s_features: Output projection state size.
+            inplace:
+        """
         super(BoundaryDetector, self).__init__()
         self.inplace = inplace
         self.Wsi = Parameter(torch.Tensor(s_features, i_features))
@@ -171,7 +183,23 @@ class BoundaryDetector(nn.Module):
         self.vs.data.uniform_(-stdv, stdv)
 
     def forward(self, x, h):
-        z = F.linear(x, self.Wsi) + F.linear(h, self.Wsh) + self.bias
+        """
+
+        Args:
+            x (Tensor [N, project_size]): Encoded video frame input.
+            h (Tensor [N, project_size]): LSTM Hidden state.
+
+        Returns:
+
+        """
+
+        # z: [N, project_size] * [N, mid_size, project_size] → [N, mid_size]
+        #    + [N, hidden_size] * [N, mid_size, hidden_size] → [N, mid_size]
+        #    + [N, mid_size] → [N, mid_size]
+        z = F.linear(x, self.Wsi) \
+            + F.linear(h, self.Wsh) \
+            + self.bias
+        # z: [N, mid_size] * [mid_size, 1] → [N, 1]
         z = F.sigmoid(F.linear(z, self.vs))
         return BinaryGate.apply(z, self.training, self.inplace)
 
@@ -228,26 +256,40 @@ class Encoder(nn.Module):
         lstm2_h, lstm2_c = self._init_lstm_state(video_feats)
 
         # 只取表观特征
+        # video_feats: [N, T, feature_size]
         video_feats = video_feats[:, :, :self.feature_size].contiguous()
 
+        # video_feats: [N * T, feature_size]
         v = video_feats.view(-1, self.feature_size)
+
+        # v: [N * T, projected_size]
         v = self.frame_embed(v)
         v = self.frame_drop(v)
+
+        # v: [N, T, projected_size]
         v = v.view(batch_size, -1, self.projected_size)
 
+        # Run projected video_features into recurrent network.
         for i in range(self.max_frames):
+            # Runs boundary detector on video frame.
+            # v: [N, project_size] → [N, 1]
             s = self.bd(v[:, i, :], lstm1_h)
-            # print(sum(s.data)[0])
+
+            # v: [N, project_size] → lstm1: [N, hidden_size]
             lstm1_h, lstm1_c = self.lstm1_cell(v[:, i, :], (lstm1_h, lstm1_c))
             lstm1_h = self.lstm1_drop(lstm1_h)
 
+            # lstm2_input: [N, hidden_size] * [N, 1] → [N, hidden_size]
             lstm2_input = lstm1_h * s
+            # lstm2: [N, hidden_size] → [N, hidden_size]
             lstm2_h, lstm2_c = self.lstm2_cell(lstm2_input, (lstm2_h, lstm2_c))
             lstm2_h = self.lstm2_drop(lstm2_h)
 
+            # lstm1: [N, hidden_size] - [N, 1] → [N, hidden_size]
             lstm1_h = lstm1_h * (1 - s)
             lstm1_c = lstm1_c * (1 - s)
 
+        # lstm2: [N, hidden_size]
         return lstm2_h
 
 
@@ -256,8 +298,15 @@ class Decoder(nn.Module):
     视频内容解码器
     '''
 
-    def __init__(self, encoded_size, projected_size, hidden_size,
-                 max_words):
+    def __init__(self, encoded_size, projected_size, hidden_size, max_words):
+        """
+
+        Args:
+            encoded_size: Encoder hidden_size.
+            projected_size: Global projected_size.
+            hidden_size: Decoder hidden_size.
+            max_words: Maximum word sequence.
+        """
         super(Decoder, self).__init__()
         self.encoded_size = encoded_size
         self.projected_size = projected_size
@@ -287,7 +336,7 @@ class Decoder(nn.Module):
         """
 
         Args:
-            video_encoded:
+            video_encoded (torch.FloatTensor [N, hidden_size]): Encoded hidden state from encoder.
             captions (torch.LongTensor [max_vid_len, max_cap_len]): Caption indices.
             teacher_forcing_ratio:
 
@@ -304,8 +353,12 @@ class Decoder(nn.Module):
             assert captions.max() <= len(vocab())  # REVIEW josephz: Fix this afterwards, with comment on obscure bug
 
         # Initialize GRU state.
+        # video_encoded: [N, encoded_size]
+        # gru_h: [projected_size, hidden_size]
         gru_h = self._init_gru_state(video_encoded)
 
+        # outputs: [max_words, N] during inference time, represents word_idx.
+        # outputs: [max_words, N, vocab_size] else, represents logits.
         if infer:
             if use_cuda:
                 outputs = torch.cuda.FloatTensor(self.max_words, batch_size).fill_(0)
@@ -318,13 +371,17 @@ class Decoder(nn.Module):
             else:
                 outputs = torch.FloatTensor(self.max_words, batch_size, len(vocab())).fill_(0)
 
-
         # Append START token to to sentence.
         word_id = vocab()[Token.START]
+
+        # word: [N, 1], filled with word_id=START.
         word = video_encoded.data.new(batch_size, 1).long().fill_(word_id)
+
+        # word: [N,
         word = self.word_embed(word).squeeze(1)
         word = self.word_drop(word)
 
+        # video_encoded: [N, 1]
         vm = self.v2m(video_encoded)
         for i in range(self.max_words):
             if not infer:
@@ -337,7 +394,7 @@ class Decoder(nn.Module):
 
             # if not infer and all(x == v[Token.PAD] for x in captions[:, i].data):
             #     If all the word ids are Token.PAD, then we have hit the end of the sentence.
-                # break
+            # break
             # Push word to decoder.
             wm = self.w2m(word)
 
@@ -375,9 +432,10 @@ class Decoder(nn.Module):
         '''
         return self.forward(video_feats, None, teacher_forcing_ratio=0.0)
 
+
 class BANet(nn.Module):
     def __init__(self, feature_size, projected_size, mid_size, hidden_size,
-                 max_frames, max_words, use_cuda):
+            max_frames, max_words, use_cuda):
         super(BANet, self).__init__()
 
         encoder = Encoder(feature_size, projected_size, mid_size, hidden_size, max_frames)
