@@ -5,9 +5,8 @@ video.py
 
 Utilities for loading video datasets and building video feature vectors
 """
-import glob
 import os
-from collections import deque
+from typing import Tuple, List
 
 import cv2
 import imageio
@@ -23,28 +22,35 @@ from src.model.models import MotionEncoder, AppearanceEncoder
 _logger = _util.get_logger(__file__)
 
 
-def sample_frames(video_path, frequency):
+def sample_frames(video_path: str, num_frames: int) -> Tuple[List[np.ndarray], None]:
     assert os.path.isfile(video_path), "Could not find video at path: {}".format(video_path)
-    assert isinstance(frequency, float) and 0. < frequency <= 1.0, "Frequency must be float in (0,1]"
 
     vid = imageio.get_reader(video_path)
-    fps = vid.get_meta_data()['fps']
+    vid_len = sum(1 for _ in vid)
+    vid = imageio.get_reader(video_path)
+
+    # fps = vid.get_meta_data()['fps']
     dims = vid.get_data(0).shape
 
-    period = round(fps / frequency)
+    period = vid_len // num_frames
     frames = []
-    clips = []
-    clip_len = min(2 * period, 16)
-    clip_seq = deque(maxlen=clip_len)
+    # clips = []
+    # clip_len = min(2 * period, 16)
+    # clip_seq = deque(maxlen=clip_len)
     for i, frame in enumerate(vid):
-        clip_seq.append(frame)
+        # clip_seq.append(frame)
         if i % period == 0:
+            if len(frames) == num_frames:
+                break
             assert frame.shape == dims, "Shape of frame {} ({}) does not match starting frame {}".format(i, frame.shape, dims)
             frames.append(frame)
-        if i > period and len(clip_seq) == clip_len and i % period == 0:
-            clips.append(list(clip_seq))
-            clip_seq.clear()
-    return frames, clips
+        # if i > period and len(clip_seq) == clip_len and i % period == 0:
+        #     clips.append(list(clip_seq))
+        #     clip_seq.clear()
+
+    assert len(frames) == num_frames, "Could not construct {} frames from {} which contains only {} frames" \
+        .format(num_frames, os.path.basename(video_path), vid_len)
+    return frames, None  # clips
 
 
 def resize_frame(frame, dims):
@@ -78,15 +84,13 @@ def preprocess_frame(frame, dims=(224, 224)):
     return frame
 
 
-def extract_features(raw, dataset, mode, frequency=1.0, max_frames=-1, overwrite=False, aencoder=AppearanceEncoder(),
-                     mencoder=MotionEncoder()):
+def extract_features(raw, dataset, mode, max_frames=-1, overwrite=False, aencoder=AppearanceEncoder(), mencoder=MotionEncoder()):
     """
     Builds appearance and motion features for a list of videos.
 
     :param raw: Raw dataset of videos for which to extract features.
     :param dataset: Dataset in which to place the resultant features.
     :param mode: Dataset mode (train, val, test).
-    :param frequency: Frequency at which to sample frames from the videos in Hz in (0, 1]
     :param max_frames: Maximum number of allowable frames in a given video.
     :param overwrite: Unless this flag is specified, will fail rather than overwrite existing cache.
     :param aencoder: Encoder used for appearance.
@@ -98,7 +102,6 @@ def extract_features(raw, dataset, mode, frequency=1.0, max_frames=-1, overwrite
     assert isinstance(dataset, str)
     assert isinstance(mode, str) and mode == "train" or mode == "val" or mode == "test", \
         "Extraction mode must be train, val, or test got {}".format(mode)
-    assert isinstance(frequency, float) and 0 < frequency <= 1.
     assert isinstance(max_frames, int) and max_frames > 0, "max_frame must be a positive integer"
     assert isinstance(aencoder, nn.Module)
     assert isinstance(mencoder, nn.Module)
@@ -119,9 +122,7 @@ def extract_features(raw, dataset, mode, frequency=1.0, max_frames=-1, overwrite
 
     features = np.zeros((len(videos), max_frames, num_features), dtype=np.float32)
     for i, video_path in enumerate(tqdm(videos)):
-        frames, clips = sample_frames(video_path, frequency)
-        assert len(frames) <= max_frames, "Cannot fit video {} with {} frames given max_frames {}" \
-            .format(os.path.basename(video_path), len(frames), max_frames)
+        frames, _ = sample_frames(video_path, max_frames)
 
         frames = np.array([preprocess_frame(f) for f in frames])
         frames = frames.transpose(0, 3, 1, 2)
