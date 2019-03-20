@@ -371,6 +371,8 @@ class Decoder(nn.Module):
                 outputs = torch.cuda.FloatTensor(self.max_words, batch_size, len(vocab())).fill_(0)
             else:
                 outputs = torch.FloatTensor(self.max_words, batch_size, len(vocab())).fill_(0)
+            outputs[0, :, vocab()[Token.START]] = 1.0
+        assert captions is None or captions[:, 0].max() == captions[:, 0].min() == vocab()[Token.START]
 
         # Append START token to to sentence.
         word_id = vocab()[Token.START]
@@ -386,7 +388,7 @@ class Decoder(nn.Module):
         # video_encoded: [N, encoded_size]
         # vm: [N, encoded_size] → [N, projected_size]
         vm = self.v2m(video_encoded)
-        for i in range(self.max_words):
+        for i in range(1, self.max_words):
             if not infer:
                 allThings = True
                 for x in captions[:, i]:
@@ -414,7 +416,9 @@ class Decoder(nn.Module):
             if use_teacher_forcing:
                 word_id = captions[:, i]
             else:
-                word_id = word_logits.max(1)[1]
+                # word_id = word_logits.max(1)[1]
+                posterior = F.softmax(word_logits, dim=1)
+                word_id = torch.multinomial(posterior, 1).squeeze(1)
 
             if infer:
                 # In infer mode, use word_id from label.
