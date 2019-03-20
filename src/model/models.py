@@ -339,9 +339,10 @@ class Decoder(nn.Module):
             video_encoded (torch.FloatTensor [N, hidden_size]): Encoded hidden state from encoder.
             captions (torch.LongTensor [max_vid_len, max_cap_len]): Caption indices.
             teacher_forcing_ratio:
+            use_cuda: Flag whether to use the GPU.
 
         Returns:
-
+            outputs (torch.Tensor[]):
 
         """
         batch_size = len(video_encoded)
@@ -398,8 +399,8 @@ class Decoder(nn.Module):
             #     If all the word ids are Token.PAD, then we have hit the end of the sentence.
             # break
             # Push word to decoder.
-            # word_i: [N, projected_size]
-            # wm: [N, hidden_size]
+            # word_i: [N, projected_size] →
+            #   wm: [N, hidden_size]
             wm = self.w2m(word)
 
             # Concatenate the video encoding and word encoding.
@@ -424,17 +425,18 @@ class Decoder(nn.Module):
             # Compute word representation.
             word = self.word_embed(word_id).squeeze(1)
             word = self.word_drop(word)
-        # unsqueeze(1)会把一个向量(n)拉成列向量(nx1)
-        # outputs中的每一个向量都是整个batch在某个时间步的输出
-        # 把它拉成列向量之后再横着拼起来，就能得到整个batch在所有时间步的输出
+
+        # unsqueeze(1) will pull a vector (n) into a column vector (nx1)        
+        # Each vector in  output is the output of the entire batch at a certain time step
+        # Pull it into a column vector and then slash it up to get the output of the entire batch at all time steps.
         assert len(outputs) > 0
         outputs = torch.cat([o.unsqueeze(1) for o in outputs], 1).contiguous()
         return outputs
 
     def sample(self, video_feats):
-        '''
-        sample就是不给caption且不用teacher forcing的forward
-        '''
+        """
+        Sample is for non-teacher forcing or without-captions inference mode.
+        """
         return self.forward(video_feats, None, teacher_forcing_ratio=0.0)
 
 
