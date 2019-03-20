@@ -375,13 +375,15 @@ class Decoder(nn.Module):
         word_id = vocab()[Token.START]
 
         # word: [N, 1], filled with word_id=START.
+        # This represents, for each batch, the START token.
         word = video_encoded.data.new(batch_size, 1).long().fill_(word_id)
 
-        # word: [N,
+        # word: [N, projected_size]
         word = self.word_embed(word).squeeze(1)
         word = self.word_drop(word)
 
-        # video_encoded: [N, 1]
+        # video_encoded: [N, encoded_size]
+        # vm: [N, encoded_size] → [N, projected_size]
         vm = self.v2m(video_encoded)
         for i in range(self.max_words):
             if not infer:
@@ -396,6 +398,8 @@ class Decoder(nn.Module):
             #     If all the word ids are Token.PAD, then we have hit the end of the sentence.
             # break
             # Push word to decoder.
+            # word_i: [N, projected_size]
+            # wm: [N, hidden_size]
             wm = self.w2m(word)
 
             # Concatenate the video encoding and word encoding.
@@ -403,10 +407,11 @@ class Decoder(nn.Module):
             gru_h = self.gru_cell(m, gru_h)
             gru_h = self.gru_drop(gru_h)
 
+            # Finally decode the word_{i+1}.
             word_logits = self.word_restore(gru_h)
             use_teacher_forcing = not infer and (random.random() < teacher_forcing_ratio)
             if use_teacher_forcing:
-                word_id = captions[:, i].clone()
+                word_id = captions[:, i]
             else:
                 word_id = word_logits.max(1)[1]
 
