@@ -38,7 +38,7 @@ frames -> low dim (encoder) -> decoder -> word -> bert -> summarization
     - Download MSRVTT if necessary
   - Initialize Models
     - Possibly load existing weights
-- [ ] Train Loop
+- [x] Train Loop
   - Save weights, visualize if wanted
   - Execute epoch step
   - Evaluate loss and backprop
