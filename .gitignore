@@ -11,8 +11,9 @@ data/*
 
 ## PyEnv
 bin/
-extern/
 lib/
+extern/banet
+extern/LipReading
 pip-selfcheck.json
 pyvenv.cfg
 share/
