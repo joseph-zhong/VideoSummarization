@@ -332,7 +332,7 @@ class Decoder(nn.Module):
         bsz = d.size(0)
         return d.data.new(bsz, self.hidden_size).zero_()
 
-    def forward(self, video_encoded, captions, use_cuda=False, teacher_forcing_ratio=0.5):
+    def forward(self, video_encoded, captions, use_cuda=False, teacher_forcing_ratio=0.5, use_argmax=False):
         """
 
         Args:
@@ -340,6 +340,7 @@ class Decoder(nn.Module):
             captions (torch.LongTensor [max_vid_len, max_cap_len]): Caption indices.
             teacher_forcing_ratio:
             use_cuda: Flag whether to use the GPU.
+            use_argmax: Flag whether to decode using greedy or multinomial sampling.
 
         Returns:
             outputs (torch.Tensor[]):
@@ -416,9 +417,11 @@ class Decoder(nn.Module):
             if use_teacher_forcing:
                 word_id = captions[:, i]
             else:
-                # word_id = word_logits.max(1)[1]
-                posterior = F.softmax(word_logits, dim=1)
-                word_id = torch.multinomial(posterior, 1).squeeze(1)
+                if use_argmax:
+                    word_id = word_logits.max(1)[1]
+                else:
+                    posterior = F.softmax(word_logits, dim=1)
+                    word_id = torch.multinomial(posterior, 1).squeeze(1)
 
             if infer:
                 # In infer mode, use word_id from label.
@@ -445,8 +448,7 @@ class Decoder(nn.Module):
 
 
 class BANet(nn.Module):
-    def __init__(self, feature_size, projected_size, mid_size, hidden_size,
-            max_frames, max_words, use_cuda):
+    def __init__(self, feature_size, projected_size, mid_size, hidden_size, max_frames, max_words, use_cuda):
         super(BANet, self).__init__()
 
         encoder = Encoder(feature_size, projected_size, mid_size, hidden_size, max_frames)
@@ -457,7 +459,7 @@ class BANet(nn.Module):
         self.decoder = decoder
         self.use_cuda = use_cuda
 
-    def forward(self, videos, captions, use_cuda=False, teacher_forcing_ratio=0.5):
+    def forward(self, videos, captions, use_cuda=False, teacher_forcing_ratio=0.5, use_argmax=False):
         video_encoded = self.encoder(videos)
-        output = self.decoder(video_encoded, captions, self.use_cuda, teacher_forcing_ratio)
+        output = self.decoder(video_encoded, captions, self.use_cuda, teacher_forcing_ratio, use_argmax=use_argmax)
         return output, video_encoded

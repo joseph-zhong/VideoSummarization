@@ -62,6 +62,7 @@ def train(
     ckpt_freq: int=3,
     use_cuda: bool=False,
     use_ckpt: bool=False,
+    use_argmax: bool=False,
     seed: int=0,
 ):
     """
@@ -86,6 +87,7 @@ def train(
         ckpt_freq (int): Frequency to compute evaluation metrics and save checkpoint.
         use_cuda (bool): Flag whether to use CUDA devices.
         use_ckpt (bool): Flag on whether to load checkpoint if possible.
+        use_argmax (bool): Flag on whether to use greedy or multinomial sampling during decoding.
         seed (int): Random seed.
 
     Effects:
@@ -135,7 +137,9 @@ def train(
     print("Evaluating on '{}'".format(eval_dir))
 
     # Initialize the model.
-    banet = _models.BANet(a_feature_size, projected_size, mid_size, hidden_size, max_frames, max_words, use_cuda=use_cuda)
+    banet = _models.BANet(
+        a_feature_size, projected_size, mid_size, hidden_size, max_frames, max_words,
+        use_cuda=use_cuda)
 
     # Load model weights if possible.
     if use_ckpt:
@@ -191,7 +195,7 @@ def train(
 
             # Zero the gradients and run the encoder-decoder model.
             optimizer.zero_grad()
-            outputs, video_encoded = banet(videos, targets, teacher_forcing_ratio=epsilon)
+            outputs, video_encoded = banet(videos, targets, teacher_forcing_ratio=epsilon, use_argmax=use_argmax)
 
             # NOTE: Usually the last batch is less than the selected batch_size, so we dynamically
             #       compute the correct batch_size to use here, rather than throwing away the last
