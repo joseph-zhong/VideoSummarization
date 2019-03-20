@@ -224,11 +224,11 @@ def train(
                 _tb_logger.log_value('perplexity', perplexity, epoch * num_train_steps + i)
                 loss_count = 0
                 tokens = banet.decoder.sample(video_encoded)
-                tokens = tokens.data[0].squeeze()
-                we = vocab().decode(tokens)
-                gt = vocab().decode(captions[0].squeeze())
-                print('[vid:{}]'.format(video_ids[0]))
-                print('WE: %s\nGT: %s' % (we, gt))
+                for j in range(5):
+                    we = vocab().decode(tokens.data[i].squeeze())
+                    gt = vocab().decode(captions[i].squeeze())
+                    print('[vid:{}]'.format(video_ids[i]))
+                    print('WE: %s\nGT: %s' % (we, gt))
 
         # Save epoch checkpoint.
         banet_pth_path = banet_pth_path_fmt.format(epoch, num_epochs)

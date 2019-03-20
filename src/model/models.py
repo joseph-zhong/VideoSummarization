@@ -445,8 +445,8 @@ class BANet(nn.Module):
 
         encoder = Encoder(feature_size, projected_size, mid_size, hidden_size, max_frames)
         decoder = Decoder(hidden_size, projected_size, hidden_size, max_words)
-        if use_cuda:
-            encoder = _train.DataParallel(encoder)
+        # if use_cuda:
+            #encoder = _train.DataParallel(encoder)
         self.encoder = encoder
         self.decoder = decoder
         self.use_cuda = use_cuda
