@@ -31,11 +31,10 @@ def eval_step(eval_loader, banet, prediction_txt_path, reference, use_cuda=False
 
     prediction_txt = open(prediction_txt_path, 'w')
     for vid, s in result.items():
-        prediction_txt.write('{}\t{}\n'.format(vid[5:], s))  # 注意，MSVD数据集的视频文件名从1开始
+        prediction_txt.write('{}\t{}\n'.format(vid[5:], s))
 
     prediction_txt.close()
 
-    # 开始根据生成的结果计算各种指标
     metrics = measure(prediction_txt_path, reference)
     return metrics
 
@@ -43,12 +42,10 @@ def eval_step(eval_loader, banet, prediction_txt_path, reference, use_cuda=False
 def measure(prediction_txt_path, reference):
     prediction_json_path = prediction_txt_path.replace(".txt", ".json")
 
-    # 把txt格式的预测结果转换成检验程序所要求的格式
     crf = _coco.CocoResFormat()
     crf.read_file(prediction_txt_path, True)
     crf.dump_json(prediction_json_path)
 
-    # 把txt格式的预测结果转换成检验程序所要求的格式
     # cocoRes = reference.loadRes(crf.res)
     cocoRes = reference.loadRes(prediction_json_path)
     cocoEval = COCOEvalCap(reference, cocoRes)

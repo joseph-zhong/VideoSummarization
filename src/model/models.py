@@ -208,18 +208,8 @@ class BoundaryDetector(nn.Module):
 
 
 class Encoder(nn.Module):
-    '''
-    Hierarchical Boundart-Aware视频编码器
-    '''
 
     def __init__(self, feature_size, projected_size, mid_size, hidden_size, max_frames):
-        '''
-        feature_size: 视频帧的特征大小，2048维
-        projected_size: 特征的投影维度
-        mid_size: BD单元的中间表达维度
-        hidden_size: LSTM的隐藏单元个数（隐层表示的维度）
-        num_frames: 视觉特征的序列长度
-        '''
         super(Encoder, self).__init__()
 
         self.feature_size = feature_size
@@ -227,18 +217,14 @@ class Encoder(nn.Module):
         self.hidden_size = hidden_size
         self.max_frames = max_frames
 
-        # frame_embed用来把视觉特征降维
         self.frame_embed = nn.Linear(feature_size, projected_size)
         self.frame_drop = nn.Dropout(p=0.5)
 
-        # lstm1_cell是低层的视频序列编码单元
         self.lstm1_cell = nn.LSTMCell(projected_size, hidden_size)
         self.lstm1_drop = nn.Dropout(p=0.5)
 
-        # bd是一个边界检测单元
         self.bd = BoundaryDetector(projected_size, hidden_size, mid_size)
 
-        # lstm2_cell是高层的视频序列编码单元
         self.lstm2_cell = nn.LSTMCell(hidden_size, hidden_size, bias=False)
         self.lstm2_drop = nn.Dropout(p=0.5)
 
@@ -247,15 +233,10 @@ class Encoder(nn.Module):
         return d.data.new(bsz, self.hidden_size).zero_(), d.data.new(bsz, self.hidden_size).zero_()
 
     def forward(self, video_feats):
-        '''
-        用Hierarchical Boundary-Aware Neural Encoder对视频进行编码
-        '''
         batch_size = len(video_feats)
-        # 初始化LSTM状态
         lstm1_h, lstm1_c = self._init_lstm_state(video_feats)
         lstm2_h, lstm2_c = self._init_lstm_state(video_feats)
 
-        # 只取表观特征
         # video_feats: [N, T, feature_size]
         video_feats = video_feats[:, :, :self.feature_size].contiguous()
 
@@ -294,9 +275,6 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    '''
-    视频内容解码器
-    '''
 
     def __init__(self, encoded_size, projected_size, hidden_size, max_words):
         """
