@@ -15,10 +15,17 @@
 \usepackage[hyperref]{acl2019}
 \usepackage{times}
 \usepackage{latexsym}
+\usepackage{graphicx} % include graphics
+\usepackage{amsmath,amsfonts,amsthm,amssymb,amsopn,bm}
+\usepackage{dsfont}
+\usepackage{listings} % lstlisting
+\usepackage{multirow}
+\usepackage{tabularx}
+
 
 \usepackage{url}
 
-%\aclfinalcopy % Uncomment this line for the final submission
+\aclfinalcopy % Uncomment this line for the final submission
 %\def\aclpaperid{***} %  Enter the acl Paper ID here
 
 %\setlength\titlebox{5cm}
@@ -28,551 +35,321 @@
 % in the camera-ready version and ask you to change it back.
 
 \newcommand\BibTeX{B\textsc{ib}\TeX}
+%%% math notations
+\newcommand{\X}{\mathbf{X}}
+\newcommand{\R}{\mathds{R}}
 
-\title{Instructions for ACL 2019 Proceedings}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Lstlisting setting
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\footnotesize\sffamily,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2 
+}
+\lstset{style=mystyle}
 
-\author{First Author \\
-  Affiliation / Address line 1 \\
-  Affiliation / Address line 2 \\
-  Affiliation / Address line 3 \\
-  \texttt{email@domain} \\\And
-  Second Author \\
-  Affiliation / Address line 1 \\
-  Affiliation / Address line 2 \\
-  Affiliation / Address line 3 \\
-  \texttt{email@domain} \\}
+
+\title{Video Summarization}
+
+\author{Ryan Rowe \\
+  University of Washington \\ 
+  \And
+  Joseph Zhong \\
+  University of Washington \\ 
+  \texttt{\{rfrowe, josephz, prestonj\} @cs.washington.edu} \\
+  \And
+  Preston Jiang \\
+  University of Washington \\ 
+}
 
 \date{}
 
 \begin{document}
 \maketitle
 \begin{abstract}
-  This document contains the instructions for preparing a camera-ready
-  manuscript for the proceedings of ACL 2019. The document itself
-  conforms to its own specifications, and is therefore an example of
-  what your manuscript should look like. These instructions should be
-  used for both papers submitted for review and for final versions of
-  accepted papers.  Authors are asked to conform to all the directions
-  reported in this document.
+    The use of recurrent neural networks with attention for processing time-sequential information, from audio, natural language processing, signal processing, as well as video processing has gained significant recent popularity, as this framework can be generalized to generate sequential outputs, such as captions. 
+    In this paper, we propose a neural-based encoder-decoder method inspired with recent innovations incorporating attention mechanisms to re-weight the importance of encoded features across time. We deviate from this framework, instead, approaching discontinuities in input video contexts by directly detecting temporal boundaries in the encoding recurrent network.
+    
+    We provide our source code repository below\footnote{\url{https://github.com/joseph-zhong/VideoSummarization/}}.
 \end{abstract}
-
-\section{Credits}
-
-This document has been adapted from the instructions
-for earlier ACL and NAACL proceedings,
-including 
-those for 
-NAACL 2019 by Stephanie Lukin and Alla Roskovskaya, 
-ACL 2018 by Shay Cohen, Kevin Gimpel, and Wei Lu, 
-NAACL 2018 by Margaret Michell and Stephanie Lukin,
-2017/2018 (NA)ACL bibtex suggestions from Jason Eisner,
-ACL 2017 by Dan Gildea and Min-Yen Kan, 
-NAACL 2017 by Margaret Mitchell, 
-ACL 2012 by Maggie Li and Michael White, 
-those from ACL 2010 by Jing-Shing Chang and Philipp Koehn, 
-those for ACL 2008 by JohannaD. Moore, Simone Teufel, James Allan, and Sadaoki Furui, 
-those for ACL 2005 by Hwee Tou Ng and Kemal Oflazer, 
-those for ACL 2002 by Eugene Charniak and Dekang Lin, 
-and earlier ACL and EACL formats.
-Those versions were written by several
-people, including John Chen, Henry S. Thompson and Donald
-Walker. Additional elements were taken from the formatting
-instructions of the \emph{International Joint Conference on Artificial
-  Intelligence} and the \emph{Conference on Computer Vision and
-  Pattern Recognition}.
 
 \section{Introduction}
 
-The following instructions are directed to authors of papers submitted
-to ACL 2019 or accepted for publication in its proceedings. All
-authors are required to adhere to these specifications. Authors are
-required to provide a Portable Document Format (PDF) version of their
-papers. \textbf{The proceedings are designed for printing on A4
-paper.}
 
-\section{General Instructions}
+Every minute over 300 hours of video content are uploaded to YouTube.  This works out to nearly 50 years of new content each day.  The sheer amount of video data available–-thanks to the advent of the Internet-–on YouTube, Vimeo, Twitter, and hundreds of other websites means it is impossible for human eyes to watch each frame.  In order to quickly review massive amounts of video content, especially for long, multi-contextual videos such as surveillance videos, vlogs, or travel videos, one must first summarize each video.
 
-Manuscripts must be in two-column format.  Exceptions to the
-two-column format include the title, authors' names and complete
-addresses, which must be centered at the top of the first page, and
-any full-width figures or tables (see the guidelines in
-Subsection~\ref{ssec:first}). \textbf{Type single-spaced.}  Start all
-pages directly under the top margin. See the guidelines later
-regarding formatting the first page.  The manuscript should be
-printed single-sided and its length
-should not exceed the maximum page limit described in Section~\ref{sec:length}.
-Pages are numbered for  initial submission. However, \textbf{do not number the pages in the camera-ready version}.
+In general, automatically describing video through human natural language is an important task in computer vision and machine learning: a similar and tangential task called video captioning extends towards a significant field of applications.
 
-By uncommenting {\small\verb|\aclfinalcopy|} at the top of this 
- document, it will compile to produce an example of the camera-ready formatting; by leaving it commented out, the document will be anonymized for initial submission.  When you first create your submission on softconf, please fill in your submitted paper ID where {\small\verb|***|} appears in the {\small\verb|\def\aclpaperid{***}|} definition at the top.
+Many such video summarizers exist for various purposes.  For example, Descriptive Video Service (DVS) \cite{Dvs2019}  produces  video  descriptions  for  the  purpose  of  making  visual  media  such  as  television  or  films  more accessible to people of low-vision or other visual impairment \cite{Adp2019}. 
 
-The review process is double-blind, so do not include any author information (names, addresses) when submitting a paper for review.  
-However, you should maintain space for names and addresses so that they will fit in the final (accepted) version.  The ACL 2019 \LaTeX\ style will create a titlebox space of 2.5in for you when {\small\verb|\aclfinalcopy|} is commented out.  
+Analogous to video summarization, the tangentially related problem of captioning
+has been applied to static images, or static visual captioning
+\cite{DBLP:journals/corr/VinyalsTBE14, DBLP:journals/corr/KarpathyF14,
+DBLP:journals/corr/XuBKCCSZB15, DBLP:journals/corr/VinyalsTBE16}. Such
+techniques in image captioning have provided a fundamental basis for approaching
+describing visual content in terms of natural language. As a result, this
+approach has been extended to deal with the temporal progression of video
+frames \cite{2015arXiv150208029Y, DBLP:journals/corr/SutskeverVL14,
+DBLP:journals/corr/YuWHYX15}. 
 
-\subsection{The Ruler}
-The ACL 2019 style defines a printed ruler which should be presented in the
-version submitted for review.  The ruler is provided in order that
-reviewers may comment on particular lines in the paper without
-circumlocution.  If you are preparing a document without the provided
-style files, please arrange for an equivalent ruler to
-appear on the final output pages.  The presence or absence of the ruler
-should not change the appearance of any other content on the page.  The
-camera ready copy should not contain a ruler. (\LaTeX\ users may uncomment the {\small\verb|\aclfinalcopy|} command in the document preamble.)  
+Overall, past methods for video captioning and summarization have primarily
+applied recurrent neural networks \cite{DBLP:journals/corr/abs-1808-03314,
+DBLP:journals/corr/abs-1801-01078, DBLP:journals/corr/Lipton15} or long short-term memory neural
+architectures \cite{hochreiter1997long, olah_2015}
+which have been shown to be effective models for capturing the temporal
+relationship between sequences of information. Naively applied, recurrent neural
+networks and long short-term memory architectures can be effective for modelling
+the sequential nature in time series data. However in the case of video
+captioning, and in particular, complex edited videos with multiple segmented
+points of short scenes, can have high variance in visual appearance, while still
+maintaining contextual consistency \cite{DBLP:journals/corr/BaraldiGC16b}. 
 
-Reviewers: note that the ruler measurements do not align well with
-lines in the paper -- this turns out to be very difficult to do well
-when the paper contains many figures and equations, and, when done,
-looks ugly. In most cases one would expect that the approximate
-location will be adequate, although you can also use fractional
-references (\emph{e.g.}, the first paragraph on this page ends at mark $108.5$).
+Thus, in this paper we propose an architecture inspired by the work Baraldi et
+al, \cite{DBLP:journals/corr/BaraldiGC16b} to use an attention-mechanism
+inspired module to encode scene discontinuities in the video sequence. We report
+experimentation on the Microsoft Video-to-Text (MSRVTT) dataset (see Figure \ref{fig:dataset})
+\cite{inproceedings_Brad} containing over 200K video clip sentence-pairs. 
 
-\subsection{Electronically-available resources}
-
-ACL provides this description in \LaTeX2e{} (\texttt{\small acl2019.tex}) and PDF
-format (\texttt{\small acl2019.pdf}), along with the \LaTeX2e{} style file used to
-format it (\texttt{\small acl2019.sty}) and an ACL bibliography style (\texttt{\small acl\_natbib.bst})
-and example bibliography (\texttt{\small acl2019.bib}).
-These files are all available at
-\texttt{\small http://acl2019.org/downloads/ acl2019-latex.zip}. 
- We
-strongly recommend the use of these style files, which have been
-appropriately tailored for the ACL 2019 proceedings.
-
-\subsection{Format of Electronic Manuscript}
-\label{sect:pdf}
-
-For the production of the electronic manuscript you must use Adobe's
-Portable Document Format (PDF). PDF files are usually produced from
-\LaTeX\ using the \textit{pdflatex} command. If your version of
-\LaTeX\ produces Postscript files, you can convert these into PDF
-using \textit{ps2pdf} or \textit{dvipdf}. On Windows, you can also use
-Adobe Distiller to generate PDF.
-
-Please make sure that your PDF file includes all the necessary fonts
-(especially tree diagrams, symbols, and fonts with Asian
-characters). When you print or create the PDF file, there is usually
-an option in your printer setup to include none, all or just
-non-standard fonts.  Please make sure that you select the option of
-including ALL the fonts. \textbf{Before sending it, test your PDF by
-  printing it from a computer different from the one where it was
-  created.} Moreover, some word processors may generate very large PDF
-files, where each page is rendered as an image. Such images may
-reproduce poorly. In this case, try alternative ways to obtain the
-PDF. One way on some systems is to install a driver for a postscript
-printer, send your document to the printer specifying ``Output to a
-file'', then convert the file to PDF.
-
-It is of utmost importance to specify the \textbf{A4 format} (21 cm
-x 29.7 cm) when formatting the paper. When working with
-\texttt{dvips}, for instance, one should specify \texttt{-t a4}.
-Or using the command \verb|\special{papersize=210mm,297mm}| in the latex
-preamble (directly below the \verb|\usepackage| commands). Then using 
-\texttt{dvipdf} and/or \texttt{pdflatex} which would make it easier for some.
-
-Print-outs of the PDF file on A4 paper should be identical to the
-hardcopy version. If you cannot meet the above requirements about the
-production of your electronic submission, please contact the
-publication chairs as soon as possible.
-
-\subsection{Layout}
-\label{ssec:layout}
-
-Format manuscripts two columns to a page, in the manner these
-instructions are formatted. The exact dimensions for a page on A4
-paper are:
-
-\begin{itemize}
-\item Left and right margins: 2.5 cm
-\item Top margin: 2.5 cm
-\item Bottom margin: 2.5 cm
-\item Column width: 7.7 cm
-\item Column height: 24.7 cm
-\item Gap between columns: 0.6 cm
-\end{itemize}
-
-\noindent Papers should not be submitted on any other paper size.
- If you cannot meet the above requirements about the production of 
- your electronic submission, please contact the publication chairs 
- above as soon as possible.
-
-\subsection{Fonts}
-
-For reasons of uniformity, Adobe's \textbf{Times Roman} font should be
-used. In \LaTeX2e{} this is accomplished by putting
-
-\begin{quote}
-\begin{verbatim}
-\usepackage{times}
-\usepackage{latexsym}
-\end{verbatim}
-\end{quote}
-in the preamble. If Times Roman is unavailable, use \textbf{Computer
-  Modern Roman} (\LaTeX2e{}'s default).  Note that the latter is about
-  10\% less dense than Adobe's Times Roman font.
-
-\begin{table}[t!]
-\begin{center}
-\begin{tabular}{|l|rl|}
-\hline \textbf{Type of Text} & \textbf{Font Size} & \textbf{Style} \\ \hline
-paper title & 15 pt & bold \\
-author names & 12 pt & bold \\
-author affiliation & 12 pt & \\
-the word ``Abstract'' & 12 pt & bold \\
-section titles & 12 pt & bold \\
-subsection titles & 11 pt & bold \\
-document text & 11 pt  &\\
-captions & 10 pt & \\
-abstract text & 10 pt & \\
-bibliography & 10 pt & \\
-footnotes & 9 pt & \\
-\hline
-\end{tabular}
-\end{center}
-\caption{\label{font-table} Font guide. }
-\end{table}
-
-\subsection{The First Page}
-\label{ssec:first}
-
-Center the title, author's name(s) and affiliation(s) across both
-columns. Do not use footnotes for affiliations. Do not include the
-paper ID number assigned during the submission process. Use the
-two-column format only when you begin the abstract.
-
-\textbf{Title}: Place the title centered at the top of the first page, in
-a 15-point bold font. (For a complete guide to font sizes and styles,
-see Table~\ref{font-table}) Long titles should be typed on two lines
-without a blank line intervening. Approximately, put the title at 2.5
-cm from the top of the page, followed by a blank line, then the
-author's names(s), and the affiliation on the following line. Do not
-use only initials for given names (middle initials are allowed). Do
-not format surnames in all capitals (\emph{e.g.}, use ``Mitchell'' not
-``MITCHELL'').  Do not format title and section headings in all
-capitals as well except for proper names (such as ``BLEU'') that are
-conventionally in all capitals.  The affiliation should contain the
-author's complete address, and if possible, an electronic mail
-address. Start the body of the first page 7.5 cm from the top of the
-page.
-
-The title, author names and addresses should be completely identical
-to those entered to the electronical paper submission website in order
-to maintain the consistency of author information among all
-publications of the conference. If they are different, the publication
-chairs may resolve the difference without consulting with you; so it
-is in your own interest to double-check that the information is
-consistent.
-
-\textbf{Abstract}: Type the abstract at the beginning of the first
-column. The width of the abstract text should be smaller than the
-width of the columns for the text in the body of the paper by about
-0.6 cm on each side. Center the word \textbf{Abstract} in a 12 point bold
-font above the body of the abstract. The abstract should be a concise
-summary of the general thesis and conclusions of the paper. It should
-be no longer than 200 words. The abstract text should be in 10 point font.
-
-\textbf{Text}: Begin typing the main body of the text immediately after
-the abstract, observing the two-column format as shown in the present document. Do not include page numbers.
-
-\textbf{Indent}: Indent when starting a new paragraph, about 0.4 cm. Use 11 points for text and subsection headings, 12 points for section headings and 15 points for the title. 
+We organize our results as follows: we start our discussion with an overview of
+previous methods in \S~2. In \S~3, we discuss our overall pipeline and
+data representation. In \S~4, we discuss the details of our architecture
+and the different neural models involved. In \S~5, we summarize our
+experiment results, and finally in \S~6 we summarize weaknesses of our approach and future work in
+video summarization.
 
 
-\begin{table}
-\centering
-\small
-\begin{tabular}{cc}
-\begin{tabular}{|l|l|}
-\hline
-\textbf{Command} & \textbf{Output}\\\hline
-\verb|{\"a}| & {\"a} \\
-\verb|{\^e}| & {\^e} \\
-\verb|{\`i}| & {\`i} \\ 
-\verb|{\.I}| & {\.I} \\ 
-\verb|{\o}| & {\o} \\
-\verb|{\'u}| & {\'u}  \\ 
-\verb|{\aa}| & {\aa}  \\\hline
-\end{tabular} & 
-\begin{tabular}{|l|l|}
-\hline
-\textbf{Command} & \textbf{Output}\\\hline
-\verb|{\c c}| & {\c c} \\ 
-\verb|{\u g}| & {\u g} \\ 
-\verb|{\l}| & {\l} \\ 
-\verb|{\~n}| & {\~n} \\ 
-\verb|{\H o}| & {\H o} \\ 
-\verb|{\v r}| & {\v r} \\ 
-\verb|{\ss}| & {\ss} \\\hline
-\end{tabular}
-\end{tabular}
-\caption{Example commands for accented characters, to be used in, \emph{e.g.}, \BibTeX\ names.}\label{tab:accents}
-\end{table}
+%%% pipeline
+\begin{figure*}
+    \centering
+    \includegraphics[scale=0.18]{pipeline.png}
+    \caption{The video summarization pipeline. Video frames are uniformly sampled. ResNet50 \cite{DBLP:journals/corr/HeZRS15} is used to extract visual information of the frames. An Encoder-Decoder framework is used to generate text summaries from frames (see text for details).}
+    \label{fig:pipeline}
+\end{figure*}
+%%%
 
-\subsection{Sections}
+\section{Related Works}
 
-\textbf{Headings}: Type and label section and subsection headings in the
-style shown on the present document.  Use numbered sections (Arabic
-numerals) in order to facilitate cross references. Number subsections
-with the section number and the subsection number separated by a dot,
-in Arabic numerals.
-Do not number subsubsections.
+Early video captioning methods have entailed visual feature extraction to
+condition the natural language captioning output in terms of subjects, objects,
+and relational actions \cite{6c13e0e7819f435599f2cc315c48d790,
+krishnamoorthy2013generating, C14-1115}. As an baseline approach, these methods
+capture the basic, high-level content of an image, but cannot generalize to
+complex sentences or unseen data outside the training dataset. Thus, this
+motivates the application of more generalized decoders through recurrent neural
+networks to better satisfy the rich natural language inherent in describing and
+captioning complex video scenes \cite{DBLP:journals/corr/abs-1808-03314,
+DBLP:journals/corr/abs-1801-01078, DBLP:journals/corr/Lipton15, hochreiter1997long, olah_2015}
+
+One early approach in video captioning by
+\citet{DBLP:journals/corr/VenugopalanXDRMS14}
+motivated the use of recurrent neural networks to encode the sequence of
+low-dimensional convolutional neural network features extracted from single
+video frames, fed into a single LSTM layer. While effective in generally
+encoding the visual content of the video frames, this method did not effectively
+encode the sequential nature of the video input, framing video captioning data
+into a static image captioning problem. Future work followed by encoding the
+sequential transition using the \textit{sequence-to-sequence} approach in
+recurrent neural architecture, encoding the sequential transitions in video
+through a stacked LSTM architecture where subsequent layers of LSTM cells were
+first conditioned by the outputs of the previous LSTM layers, inspired from work
+in machine translation \cite{DBLP:journals/corr/SutskeverVL14}. 
+
+As this general framework gained popularity, subsequent approaches incorporated
+attention mechanisms in the sentence decoding \cite{2015arXiv150208029Y}, or
+building visual-language semantic embeddings
+\cite{DBLP:journals/corr/PanMYLR15}, or encoding external prior knowledge from
+language models \cite{DBLP:journals/corr/VenugopalanHMS16}. 
+
+More recently, research in video captioning has primarily focused on taking the
+existing input representation and attempting to better exploit the internal
+representation throughout the encoder-decoder neural architecture. \citet{DBLP:journals/corr/YuWHYX15} proposed a hierarchal recurrent neural architecture, where in
+the sentence decoding, they introduced a sentence decoder as well as a paragraph
+generator using a gated recurrent unit (GRU) layer
+\cite{DBLP:journals/corr/ChoMGBSB14} while conditioning on contextual
+information generated by the sentence generator, combined with the encoded video
+features. 
+
+In contrast, \citet{DBLP:journals/corr/PanXYWZ15} focused on video encoding, also using a
+hierarchical approach to the recurrent video encoder. Similar to a
+sliding-window approach, a LSTM is applied to over-lapping video chunks of
+varying scales and granularities. 
+
+In this paper, we take inspiration from  \citet{DBLP:journals/corr/BaraldiGC16b} to combine the
+hierarchical architectures in both the encoder and decoder, while also
+incorporating an attention-mechanism inspired boundary detection module in the
+video encoder. The leveraging of
+segment-level features has been previously investigated in natural language
+processing \cite{DBLP:journals/corr/ChungAB16}, action recognition
+\cite{tang_fei-fei_koller_2012, song_morency_davis_2013,
+PirsiavashRamanan14CVPR, DBLP:journals/corr/LanZZS15} and
+event detection context \cite{DBLP:journals/corr/WangXW0LTG16}. This technique
+was first introduced to video captioning by \citet{DBLP:journals/corr/BaraldiGC16b}. We referenced
+the implementations of the boundary detector from the \citet{banet2017} repository. 
+
+\section{Approach}
+
+%%% Figure Dataset sample
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{dataset.png}
+    \caption{Example sample frames and label captions from the MSRVTT dataset \citet{Xu2016}}
+    \label{fig:dataset}
+\end{figure}
+
+The overall architecture of our processing pipeline is described in Figure~\ref{fig:pipeline}. We uniformly sampled thirty frames for every video (to ensure this, we changed the sampling frequency with respect to each video's frame rate) to downsample the amount of repetitive frames in high refresh rate videos. First, for every video frame sampled, we used a pre-trained ResNet 50 \citet{DBLP:journals/corr/HeZRS15} network as the visual feature extractor and represented each video frame as the output of its last fully connected layer. Thus, we have out input $\X$ for each forward pass of our pipeline as 
+\[\X \in \R^{N \times T \times p}\]
+where $N$ is the batch size, $T$ is the sequence length (30), and $p$ is the dimensionality of the last fully connected layer of ResNet 50 (2048). 
+
+Next, we used an Encoder-Decoder \cite{DBLP:journals/corr/ChoMGBSB14} architecture to transform video frame sequences to text summarization. For the encoder part, we used a two-layer recurrent neural network (RNN) with Long Short Term Memory (LSTM) cells \cite{hochreiter1997long}, sandwiching a boundary detector network, to encode the sequence information of the frames. The decoder consists of two fully connected networks to project the encoded frames and word embeddings and a RNN with Gated Recurrent Units (GRUs) \cite{DBLP:journals/corr/ChoMGBSB14}. The GRUs cells output the predicted words at such sequence step. 
+
+The pipeline was trained tsinghrough cross entropy losses at each word prediction step, backpropagated from the decoder to the encoder. Note that we did \emph{not} adjust the weights of ResNet 50 using the cross entropy losses, as it only served as a feature extractor for the video frames. 
+
+We discuss each part of this pipeline in detail in the next section. 
+
+\section{Models}
+
+\subsection{Encoder: LSTM + Boundary Detector}
+
+For every input of the forward pass $X$, we first fed it into the first layer of the stacked LSTM. LSTM cells are defined through four ``gates'' which represent the short-term and long-term ``memory'' of how much information to forget and remember from the past. Specifically, the four gates are defined as:
+\begin{align*}
+    i_t &= \sigma(U^{(i)}x_t + W^{(i)}h_{t-1} + b^{(i)}) \\
+    f_t &= \sigma(U^{(f)}x_t + W^{(f)}h_{t-1} + b^{(f)}) \\ 
+    o_t &= \sigma(U^{(o)}x_t + W^{(o)}h_{t-1} + b^{(o)}) \\ 
+    c_t &= f_t \circ c_{t-1} + i_t \circ \tilde{c_t}
+\end{align*}
+where $\tilde{c_t} = \text{tanh}(U^{(c)}x_t + W^{(c)}h_{t-1} + b^{(c)})$, and $h_t = o_t \circ \text{tanh}(c_t)$. Each $c_t$ is called a ``cell state'' and each $h_t$ is called a ``hidden state''. Assuming the hidden size of our LSTM network is $H$, we have our output from the first layer LSTM as $N\times T\times H$. 
+
+We took the output of every hidden state cell of the first layer, and fed them into the Boundary Detector. The boundary detectors serves as a binary gate which decides if the hidden state from the LSTM should be result before being fed into the next one. The boundary detector is defined as 
+\[s_t = \tau(\mathbf{v}^T_s \cdot [W_{si}x_t + W_{sh}h_{t-1} + b_s])\]
+where 
+\[\tau(x) =
+\begin{cases}
+1, &\text{if } \sigma(x) > 0.5 \\
+0, &\text{otherwise}
+\end{cases}\]
+$\mathbf{v_s}, W_{si}, W_{sh}, b_s$ are learned parameters. In its essence, $s_t$ creates a binary mapping of the original hidden state and cell state to either keep or forget them. The input for the second layer LSTM, aka the hidden state and cell state from the previous layer, is in turn defined as 
+\begin{align*}
+h_{t-1} = h_{t-1} \cdot (1 - s_t) \\
+c_{t-1} = c_{t-1} \cdot (1 - s_t)    
+\end{align*}
+We took the \emph{last} hidden output from the second layer LSTM as the encoding of the video frames. Therefore, our encoding has dimensionality $N \times H$. 
+
+\subsection{Decoder: Fully connected layers + GRUs}
+We first fed the encoded video frame, and word embedding into two fully connected layers respectively, which projects the dimentionality to $N \times P$, where $P$ is the output dimension. Then the output were added together to feed in the GRU cells. The GRU cells, similar to LSTM cells, are defined as 
+\begin{align*}
+    z_t &= \sigma(U^{(z)}x_t + W^{(z)}h_{t-1} + b^{(z)}) \\
+    r_t &= \sigma(U^{(r)}x_t + W^{(r)}h_{t-1} + b^{(r)}) \\ 
+    h_t &= (1 - z_t) \circ h_{t-1} + z_t \circ \tilde{h_t}
+\end{align*}
+where $\tilde{h_t} = \text{tanh}(U^{(h)}x_t + W^{(h)}(r_t \circ h_{t-1}) + b^{(h)})$. The actual words are then restored either through the $\arg\max$ of the hidden output at each step, or sampled using a multinomial distribution parameterized by the hidden output as the probabilities. Note that we used scheduled sampling \cite{Bengio:2015:SSS:2969239.2969370} during training period within a minimum ratio. 
+
+For a complete summary of the dimension run-down through the pipeline, please refer to Table~\ref{tab:dim}.
 
 \begin{table*}[t!]
 \centering
-\begin{tabular}{lll}
-  output & natbib & previous ACL style files\\
-  \hline
-  \citep{Gusfield:97} & \verb|\citep| & \verb|\cite| \\
-  \citet{Gusfield:97} & \verb|\citet| & \verb|\newcite| \\
-  \citeyearpar{Gusfield:97} & \verb|\citeyearpar| & \verb|\shortcite| \\
+\begin{tabular}{c|c|c}
+\hline \textbf{Section} & \textbf{Component} & \textbf{Output Dimensionality} \\ \hline\hline
+Feature Extraction & ResNet 50 & $N \times T \times p$ \\ \hline
+\multirow{3}{*}{Encoding} & First Layer LSTM & $N \times T \times H$ \\
+& Boundary Detector & $N \times T \times 1$ \\
+& Second Layer LSTM & $N \times H$ \\ \hline
+\multirow{3}{*}{Decoding} & Fully connected - Video Encoding & $ N \times P$ \\
+& Fully connected - Word Embedding & $ N \times P$ \\
+& GRU & $N \times \text{max words} $ \\
+\hline
 \end{tabular}
-\caption{Citation commands supported by the style file.
-  The citation style is based on the natbib package and
-  supports all natbib citation commands.
-  It also supports commands defined in previous ACL style files
-  for compatibility.
-  }
+\caption{Each component in the processing pipeline and their output dimension. $N$: batch size; $T$: time steps (30 frames); $p$: the output dimension of ResNet 50; $H$: the hidden size of LSTM; $P$: the output dimension of the fully connected layers in the decoder; max words: the maximum length of the video caption prediction.}
+\label{tab:dim}
 \end{table*}
 
-\textbf{Citations}: Citations within the text appear in parentheses
-as~\cite{Gusfield:97} or, if the author's name appears in the text
-itself, as Gusfield~\shortcite{Gusfield:97}.
-Using the provided \LaTeX\ style, the former is accomplished using
-{\small\verb|\cite|} and the latter with {\small\verb|\shortcite|} or {\small\verb|\newcite|}. Collapse multiple citations as in~\cite{Gusfield:97,Aho:72}; this is accomplished with the provided style using commas within the {\small\verb|\cite|} command, \emph{e.g.}, {\small\verb|\cite{Gusfield:97,Aho:72}|}. Append lowercase letters to the year in cases of ambiguities.  
- Treat double authors as
-in~\cite{Aho:72}, but write as in~\cite{Chandra:81} when more than two
-authors are involved. Collapse multiple citations as
-in~\cite{Gusfield:97,Aho:72}. Also refrain from using full citations
-as sentence constituents.
+%%% result - med dataset
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{result_med.png}
+    \caption{Results using a medium-size training set (25\% of MST-VTT), $\arg\max$ sampling for generating captions. Green curves have Teacher Forcing ratio 0.85, and red curves have Teaching Forcing ratio 1.0.}
+    \label{fig:result_med}
+\end{figure}
+%%%
 
-We suggest that instead of
-\begin{quote}
-  ``\cite{Gusfield:97} showed that ...''
-\end{quote}
-you use
-\begin{quote}
-``Gusfield \shortcite{Gusfield:97}   showed that ...''
-\end{quote}
+%%% result - large dataset
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{result_large.png}
+    \caption{Results using multinomial sampling for generating words, and Teaching Forcing ratio of 0.6. Orange curves use a median-size dataset (25\% of MSR-VTT), blue curves use a large-size dataset (50\% of MSR-VTT).}
+    \label{fig:result_large}
+\end{figure}
+%%%
 
-If you are using the provided \LaTeX{} and Bib\TeX{} style files, you
-can use the command \verb|\citet| (cite in text)
-to get ``author (year)'' citations.
+%%% result - top k 
+\begin{figure*}
+    \centering
+    \includegraphics[width=\linewidth]{result_topk.jpg}
+    \caption{Results using top-k ($k=20$ here) largest arguments as the multinomial probabilities for sampling to generate words, and Teaching Forcing ratio of 0.6. Green curves use a median-size dataset (25\% of MSR-VTT), oragne curves use a large-size dataset (50\% of MSR-VTT).}
+    \label{fig:result_topk}
+\end{figure*}
+%%%
 
-You can use the command \verb|\citealp| (alternative cite without 
-parentheses) to get ``author year'' citations (which is useful for 
-using citations within parentheses, as in \citealp{Gusfield:97}).
+\section{Experiments and Results}
 
-If the Bib\TeX{} file contains DOI fields, the paper
-title in the references section will appear as a hyperlink
-to the DOI, using the hyperref \LaTeX{} package.
-To disable the hyperref package, load the style file
-with the \verb|nohyperref| option: \\{\small
-\verb|\usepackage[nohyperref]{acl2019}|}
-
-\textbf{Compilation Issues}: Some of you might encounter the following error during compilation: 
-
-``{\em \verb|\pdfendlink| ended up in different nesting level than \verb|\pdfstartlink|.}''
-
-This happens when \verb|pdflatex| is used and a citation splits across a page boundary. To fix this, the style file contains a patch consisting of the following two lines: (1) \verb|\RequirePackage{etoolbox}| (line 454 in \texttt{acl2019.sty}), and (2) A long line below (line 455 in \texttt{acl2019.sty}).
-
-If you still encounter compilation issues even with the patch enabled, disable the patch by commenting the two lines, and then disable the \verb|hyperref| package (see above), recompile and see the problematic citation.
-Next rewrite that sentence containing the citation. (See, {\em e.g.}, {\small\tt http://tug.org/errors.html})
-
-\textbf{Digital Object Identifiers}:  As part of our work to make ACL
-materials more widely used and cited outside of our discipline, ACL
-has registered as a CrossRef member, as a registrant of Digital Object
-Identifiers (DOIs), the standard for registering permanent URNs for
-referencing scholarly materials.  As of 2017, we are requiring all
-camera-ready references to contain the appropriate DOIs (or as a
-second resort, the hyperlinked ACL Anthology Identifier) to all cited
-works.  Thus, please ensure that you use Bib\TeX\ records that contain
-DOI or URLs for any of the ACL materials that you reference.
-Appropriate records should be found for most materials in the current
-ACL Anthology at \url{http://aclanthology.info/}.
-
-As examples, we cite \cite{P16-1001} to show you how papers with a DOI
-will appear in the bibliography.  We cite \cite{C14-1001} to show how
-papers without a DOI but with an ACL Anthology Identifier will appear
-in the bibliography.  
-
-As reviewing will be double-blind, the submitted version of the papers
-should not include the authors' names and affiliations. Furthermore,
-self-references that reveal the author's identity, \emph{e.g.},
-\begin{quote}
-``We previously showed \cite{Gusfield:97} ...''  
-\end{quote}
-should be avoided. Instead, use citations such as 
-\begin{quote}
-``\citeauthor{Gusfield:97} \shortcite{Gusfield:97}
-previously showed ... ''
-\end{quote}
-
-Any preliminary non-archival versions of submitted papers should be listed in the submission form but not in the review version of the paper. ACL 2019 reviewers are generally aware that authors may present preliminary versions of their work in other venues, but will not be provided the list of previous presentations from the submission form. 
+We report our results on the Microsoft Video-to-Text (MSRVTT) video-captioning dataset \citet{Xu2016}. 
 
 
-\textbf{Please do not use anonymous citations} and do not include
- when submitting your papers. Papers that do not
-conform to these requirements may be rejected without review.
+%% Fuck yeah fuck Lamport.
+%% Verbatim seems to make it go beyond the column?
+\begin{figure}
+\begin{lstlisting}
+ground truth:
+<start> a country music video <end>
 
-\textbf{References}: Gather the full set of references together under
-the heading \textbf{References}; place the section before any Appendices. 
-Arrange the references alphabetically
-by first author, rather than by order of occurrence in the text.
-By using a .bib file, as in this template, this will be automatically 
-handled for you. See the \verb|\bibliography| commands near the end for more.
+top_k=20, min_ss=0.6:
+<start> a woman is talking about the voice <end>
 
-Provide as complete a citation as possible, using a consistent format,
-such as the one for \emph{Computational Linguistics\/} or the one in the 
-\emph{Publication Manual of the American 
-Psychological Association\/}~\cite{APA:83}. Use of full names for
-authors rather than initials is preferred. A list of abbreviations
-for common computer science journals can be found in the ACM 
-\emph{Computing Reviews\/}~\cite{ACM:83}.
+argmax, min_ss=0.85:
+<start> a man is playing a song <end>
 
-The \LaTeX{} and Bib\TeX{} style files provided roughly fit the
-American Psychological Association format, allowing regular citations, 
-short citations and multiple citations as described above.  
+multinomial, min_ss=0.6:
+<start> a scene of the wife s seeing <end>
+\end{lstlisting}
+\caption{Sample Output comparison between $\arg\max$, multinomial, and top-k multinomial sampling for \texttt{video7586} from the test set.}
+\label{fig:output}
+\end{figure}
 
-\begin{itemize}
-\item Example citing an arxiv paper: \cite{rasooli-tetrault-2015}. 
-\item Example article in journal citation: \cite{Ando2005}.
-\item Example article in proceedings, with location: \cite{borsch2011}.
-\item Example article in proceedings, without location: \cite{andrew2007scalable}.
-\end{itemize}
-See corresponding .bib file for further details.
+In particular, we noticed that there were significant differences in the output based on the sampling strategy strategy, as well as the scheduled sampling teacher-forcing ratio. From Figure \ref{fig:result_med}, we report results on using our ``medium-size'' dataset, using about 25\% of the total MSR-VTT dataset, using $\arg\max$ sampling during caption decoding. Compared to Figures \ref{fig:result_large} and \ref{fig:result_topk}, the quantitative results in terms of evaluation metrics ``ROUGE\_L'', ``CIDEr'', ``METEOR'' and ``Bleu'' are significantly better and with seemingly better generalization, whereas the results from using ``multinomial'' or ``top-k multinomial'' sampling. However, this is counter intuitive, as multinomial sampling will produce much more diversified outputs. In fact, from our sample outputs in Figure \ref{fig:output}, we notice that the $\arg\max$ sampling strategy consistently outputs a ``averaged'' output, where a significant portion of the dataset actually consists of labels for where it is simply ``a man talking [...]'' (See Figure \ref{fig:dataset}). Thus, this actually informs us a significant issue with the MSR-VTT and its relationship with the evaluation metrics, where because a majority of the data samples contain such a general caption such as ``there is a man talking about a race'' (See Figure \ref{fig:dataset}). As a result, the ``multinomial'' and ``top-k'' results, while quantitatively seem significantly worse, produce more specific and nuanced results which deviate the label of ``a [wo]man talking about [...]''. See more results from Figure \ref{fig:output}.
 
-Submissions should accurately reference prior and related work, including code and data. If a piece of prior work appeared in multiple venues, the version that appeared in a refereed, archival venue should be referenced. If multiple versions of a piece of prior work exist, the one used by the authors should be referenced. Authors should not rely on automated citation indices to provide accurate references for prior and related work.
+\section{Conclusions and Future Work}
 
-\textbf{Appendices}: Appendices, if any, directly follow the text and the
-references (but see above).  Letter them in sequence and provide an
-informative title: \textbf{Appendix A. Title of Appendix}.
+Overall, from the results we realize that there are two primary directions which simultaneously can significantly improve video summary generation. Firstly, we can tackle the neural architecture as motivated from previous works \citet{DBLP:journals/corr/BaraldiGC16b, 6c13e0e7819f435599f2cc315c48d790, DBLP:journals/corr/PanXYWZ15}, to better model the sequential nature of the video and exploit the context from the underlying temporal visual context, (e.g. attention mechanisms, automatic scene boundary detection). However, ultimately we suspect from our preprocessing pipeline of only using a pre-trained ImageNet \citet{imagenet_cvpr09} convolutional neural network (e.g. ResNet \citet{DBLP:journals/corr/HeZRS15}) to encode the features of the video fraem that there lies significant context to be extracted from significantly more semantically powerful and independent encoders. For example, we realized because the video sample from MSR-VTT have many captions which entirely deal in audio, that it would be a very fruitful future work to encode the audio context using both speech recognition encoders, as well as general audio scene classifiers, particularly with music videos with either singing or more culturally significant instrumental background music. 
 
-\subsection{Footnotes}
+Furthermore, beyond simply using pre-trained ImageNet encoders, we could also encode human action detection using 3D-convolutions \cite{Tran:2015:LSF:2919332.2919929}, using pretrained representations from video classification and spatio-temporal networks \citet{DBLP:journals/corr/abs-1711-10305, KarpathyCVPR14}. 
 
-\textbf{Footnotes}: Put footnotes at the bottom of the page and use 9
-point font. They may be numbered or referred to by asterisks or other
-symbols.\footnote{This is how a footnote should appear.} Footnotes
-should be separated from the text by a line.\footnote{Note the line
-separating the footnotes from the text.}
-
-\subsection{Graphics}
-
-\textbf{Illustrations}: Place figures, tables, and photographs in the
-paper near where they are first discussed, rather than at the end, if
-possible.  Wide illustrations may run across both columns.  Color
-illustrations are discouraged, unless you have verified that  
-they will be understandable when printed in black ink.
-
-\textbf{Captions}: Provide a caption for every illustration; number each one
-sequentially in the form:  ``Figure 1. Caption of the Figure.'' ``Table 1.
-Caption of the Table.''  Type the captions of the figures and 
-tables below the body, using 10 point text. Captions should be placed below illustrations. Captions that are one line are centered (see Table~\ref{font-table}). Captions longer than one line are left-aligned (see Table~\ref{tab:accents}). Do not overwrite the default caption sizes. The acl2019.sty file is compatible with the caption and subcaption packages; do not add optional arguments.
-
-
-\subsection{Accessibility}
-\label{ssec:accessibility}
-
-In an effort to accommodate people who are color-blind (as well as those printing
-to paper), grayscale readability for all accepted papers will be
-encouraged.  Color is not forbidden, but authors should ensure that
-tables and figures do not rely solely on color to convey critical
-distinctions. A simple criterion: All curves and points in your figures should be clearly distinguishable without color.
-
-% Min: no longer used as of ACL 2018, following ACL exec's decision to
-% remove this extra workflow that was not executed much.
-% BEGIN: remove
-%% \section{XML conversion and supported \LaTeX\ packages}
-
-%% Following ACL 2014 we will also we will attempt to automatically convert 
-%% your \LaTeX\ source files to publish papers in machine-readable 
-%% XML with semantic markup in the ACL Anthology, in addition to the 
-%% traditional PDF format.  This will allow us to create, over the next 
-%% few years, a growing corpus of scientific text for our own future research, 
-%% and picks up on recent initiatives on converting ACL papers from earlier 
-%% years to XML. 
-
-%% We encourage you to submit a ZIP file of your \LaTeX\ sources along
-%% with the camera-ready version of your paper. We will then convert them
-%% to XML automatically, using the LaTeXML tool
-%% (\url{http://dlmf.nist.gov/LaTeXML}). LaTeXML has \emph{bindings} for
-%% a number of \LaTeX\ packages, including the ACL 2018 stylefile. These
-%% bindings allow LaTeXML to render the commands from these packages
-%% correctly in XML. For best results, we encourage you to use the
-%% packages that are officially supported by LaTeXML, listed at
-%% \url{http://dlmf.nist.gov/LaTeXML/manual/included.bindings}
-% END: remove
-
-\section{Translation of non-English Terms}
-
-It is also advised to supplement non-English characters and terms
-with appropriate transliterations and/or translations
-since not all readers understand all such characters and terms.
-Inline transliteration or translation can be represented in
-the order of: original-form transliteration ``translation''.
-
-\section{Length of Submission}
-\label{sec:length}
-
-The ACL 2019 main conference accepts submissions of long papers and
-short papers.
- Long papers may consist of up to eight (8) pages of
-content plus unlimited pages for references. Upon acceptance, final
-versions of long papers will be given one additional page -- up to nine (9)
-pages of content plus unlimited pages for references -- so that reviewers' comments
-can be taken into account. Short papers may consist of up to four (4)
-pages of content, plus unlimited pages for references. Upon
-acceptance, short papers will be given five (5) pages in the
-proceedings and unlimited pages for references. 
-For both long and short papers, all illustrations and tables that are part
-of the main text must be accommodated within these page limits, observing
-the formatting instructions given in the present document. Papers that do not conform to the specified length and formatting requirements are subject to be rejected without review.
-
-ACL 2019 does encourage the submission of additional material that is relevant to the reviewers but not an integral part of the paper. There are two such types of material: appendices, which can be read, and non-readable supplementary materials, often data or code.  Do not include this additional material in the same document as your main paper. Additional material must be submitted as one or more separate files, and must adhere to the same anonymity guidelines as the main paper. The paper must be self-contained: it is optional for reviewers to look at the supplementary material. Papers should not refer, for further detail, to documents, code or data resources that are not available to the reviewers. Refer to Appendix~\ref{sec:appendix} and Appendix~\ref{sec:supplemental} for further information. 
-
-Workshop chairs may have different rules for allowed length and
-whether supplemental material is welcome. As always, the respective
-call for papers is the authoritative source.
+Lastly, recent works in language modeling have seen significant improvements through the evolution of attention mechanisms applied beyond recurrent neural architectures in the form of Transformer-based networks \citet{DBLP:journals/corr/abs-1810-04805, anonymous2019improving}, and could similarly enforce syntatically well-formed English captioning during decoding, rather than training the video caption decoder from scratch.
 
 \section*{Acknowledgments}
 
-The acknowledgments should go immediately before the references.  Do
-not number the acknowledgments section. Do not include this section
-when submitting your paper for review. \\
+We'd like to thank Professor Yejin Choi, and the assistants who helped and contributed greatly towards the quality of our education, Hannah Rashkin, Max Forbes, and Rowan Zellers.
 
-\noindent \textbf{Preparing References:} \\
-Include your own bib file like this:
-\verb|\bibliographystyle{acl_natbib}|
-\verb|\bibliography{acl2019}| 
-
-where \verb|acl2019| corresponds to a acl2019.bib file.
 \bibliography{acl2019}
 \bibliographystyle{acl_natbib}
 
-\appendix
 
-\section{Appendices}
-\label{sec:appendix}
-Appendices are material that can be read, and include lemmas, formulas, proofs, and tables that are not critical to the reading and understanding of the paper. 
-Appendices should be \textbf{uploaded as supplementary material} when submitting the paper for review. Upon acceptance, the appendices come after the references, as shown here. Use
-\verb|\appendix| before any appendix section to switch the section
-numbering over to letters.
-
-
-\section{Supplemental Material}
-\label{sec:supplemental}
-Submissions may include non-readable supplementary material used in the work and described in the paper. Any accompanying software and/or data should include licenses and documentation of research review as appropriate. Supplementary material may report preprocessing decisions, model parameters, and other details necessary for the replication of the experiments reported in the paper. Seemingly small preprocessing decisions can sometimes make a large difference in performance, so it is crucial to record such decisions to precisely characterize state-of-the-art methods. 
-
-Nonetheless, supplementary material should be supplementary (rather
-than central) to the paper. \textbf{Submissions that misuse the supplementary 
-material may be rejected without review.}
-Supplementary material may include explanations or details
-of proofs or derivations that do not fit into the paper, lists of
-features or feature templates, sample inputs and outputs for a system,
-pseudo-code or source code, and data. (Source code and data should
-be separate uploads, rather than part of the paper).
-
-The paper should not rely on the supplementary material: while the paper
-may refer to and cite the supplementary material and the supplementary material will be available to the
-reviewers, they will not be asked to review the
-supplementary material.
 
 
 \end{document}
