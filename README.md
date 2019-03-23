@@ -18,7 +18,7 @@ We are building Video Summarization using deep neural networks.
 
 ## Pipeline Architecture
 
-![](https://raw.github.com/joseph-zhong/VideoSummarization/master/writeup/pipline.png | width=150)
+![](./writeup/pipeline.png)
 
 We will be bootstrapping heavily from the 
 [Hierarchical Boundary-Aware Neural Encoder for Video Captioning](https://github.com/Yugnaynehc/banet) implementation, 
